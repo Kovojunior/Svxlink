@@ -12,6 +12,7 @@ files=(
     ["https://github.com/Kovojunior/Svxlink/raw/main/svxlink.conf"]="/etc/svxlink/svxlink.conf"
     ["https://github.com/Kovojunior/Svxlink/raw/refs/heads/main/connection_lost.wav"]="/usr/share/svxlink/sounds/en_US/Frn/connection_lost.wav"
     ["https://github.com/Kovojunior/Svxlink/raw/refs/heads/main/connection_restored.wav"]="/usr/share/svxlink/sounds/en_US/Frn/connection_restored.wav"
+    ["https://github.com/Kovojunior/Svxlink/raw/refs/heads/main/pmrsi_16b.wav"]="/usr/share/svxlink/sounds/en_US/Frn/pmrsi_16b.wav"
 )
 
 # Preveri, ali mapa za zvoke obstaja, če ne, jo ustvari
