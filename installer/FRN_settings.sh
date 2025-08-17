@@ -2,7 +2,7 @@
 
 CONF_FILE="/etc/svxlink/svxlink.d/ModuleFrn.conf"
 
-echo "📌 Konfiguracija Svxlink: /etc/svxlink/svxlink.d/ModuleFrn.conf"
+echo -e "\e[1;34m📌 Konfiguracija Svxlink: /etc/svxlink/svxlink.d/ModuleFrn.conf\e[0m"
 
 get_computer_type() {
     if [ -f /etc/armbian-release ]; then
@@ -96,7 +96,7 @@ case "$FREQ_NUM" in
   14) FREQ="446.16875" ;;
   15) FREQ="446.18125" ;;
   16) FREQ="446.19375" ;;
-  *) echo "Neveljavna izbira, uporabljam privzeto 16"; FREQ="446.19375" ;;
+  *) echo -e "\e[1;31mNeveljavna izbira, uporabljam privzeto 16\e[0m"; FREQ="446.19375" ;;
 esac
 
 BAND_AND_CHANNEL="$FREQ FM CTCSS100.0 (SUB12)"
@@ -142,6 +142,8 @@ echo ""
 echo -e $'\e[1;32m✅ ModuleFrn konfiguracija je posodobljena v '"$CONF_FILE"' (backup: '"${CONF_FILE}.bak"')\e[0m'
 echo -e $'\e[1;32m✅ CALLSIGN posodobljen v /etc/svxlink/svxlink.conf (backup: /etc/svxlink/svxlink.conf.bak)\e[0m'
 echo ""
-echo "📄 Posodobljena konfiguracija ModuleFrn:"
-cat "$CONF_FILE"
+echo -e "\e[1;34m📄 Posodobljena konfiguracija ModuleFrn:\e[0m"
+cat "$CONF_FILE" | while IFS= read -r line; do
+    echo -e "\e[1;34m$line\e[0m"
+done
 echo ""

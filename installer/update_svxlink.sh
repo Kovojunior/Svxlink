@@ -24,7 +24,7 @@ for url in "${!files[@]}"; do
     echo "Prenos $url -> $target"
     wget -q -O "$target" "$url"
     if [ $? -eq 0 ]; then
-        echo "✅ - Uspešno posodobljeno: $target"
+        echo -e "\e[1;32m✅ - Uspešno posodobljeno: $target\e[0m"
     else
         echo ""
         echo -e "\e[1;37;41m❌ - Napaka pri prenosu: $url\e[0m\n"
