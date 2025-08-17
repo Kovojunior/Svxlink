@@ -255,7 +255,8 @@ full_install() {
     install_svxlink
     update_svxlink "full_install"
     echo ""
-    read -p $'\e[1;33m⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje...\e[0m\n'    install_aioc_settings
+    read -p $'\e[1;33m⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje...\e[0m\n'    
+    install_aioc_settings
     
     install_frn_settings
     install_healthcheck

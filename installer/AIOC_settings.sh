@@ -11,7 +11,6 @@ PTT_DEVICE=$(ls /dev/ttyACM* 2>/dev/null | head -n1)
 
 # Preveri, če so podatki najdeni
 if [ -z "$PLAYBACK_CARD" ] || [ -z "$CAPTURE_CARD" ] || [ -z "$PTT_DEVICE" ]; then
-    echo "Test Tast"
     exit 1
 fi
 
