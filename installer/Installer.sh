@@ -86,7 +86,7 @@ update_svxlink() {
         echo -e $'\e[1;32m✅ Varnostne kopije so narejene v '"$BACKUP_DIR"$'\e[0m'
     fi
 
-    TMP_SCRIPT="/tmp/update_svxlink.sh"
+    TMP_SCRIPT="/tmp/svxlink_install/update_svxlink.sh"
     URL="https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/update_svxlink.sh"
 
     echo ""
@@ -140,7 +140,7 @@ remove_svxlink() {
 
     echo ""
     echo -e "\e[1;34m=== Brisem mape Svxlink ===\e[0m"
-    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink /tmp/AIOC_settings.bash /tmp/FRN_settings.bash
+    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink /tmp/svxlink_install/AIOC_settings.bash /tmp/svxlink_install/FRN_settings.bash
 
     echo ""
     echo -e $'\e[1;32m✅ Svxlink, konfiguracije in HealthCheck so odstranjeni!\e[0m\n'
@@ -210,9 +210,9 @@ echo -e $'\e[1;32m✅ Healthcheck nameščen in zagnan!\e[0m\n'
 # AIOC konfiguracija (neinteraktivna)
 install_aioc_settings() {
     echo -e "\e[1;34m🔧 Začenjam AIOC konfiguracijo...\e[0m"
-    wget -O /tmp/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
-    chmod +x /tmp/AIOC_settings.bash
-    if bash /tmp/AIOC_settings.bash; then
+    wget -O /tmp/svxlink_install/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
+    chmod +x /tmp/svxlink_install/AIOC_settings.bash
+    if bash /tmp/svxlink_install/AIOC_settings.bash; then
         echo -e $'\e[1;32m✅ AIOC konfiguracija uspešno izvedena.\e[0m\n'
     else
         echo ""
@@ -223,9 +223,9 @@ install_aioc_settings() {
 # FRN konfiguracija (interaktivna)
 install_frn_settings() {
     echo -e "\e[1;34m🔧 Začenjam FRN konfiguracijo (interaktivno)...\e[0m"
-    wget -O /tmp/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
-    chmod +x /tmp/FRN_settings.bash
-    bash /tmp/FRN_settings.bash
+    wget -O /tmp/svxlink_install/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
+    chmod +x /tmp/svxlink_install/FRN_settings.bash
+    bash /tmp/svxlink_install/FRN_settings.bash
 }
 
 # Wireguard namestitev brez konfiguracije
