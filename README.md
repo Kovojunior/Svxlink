@@ -24,7 +24,7 @@ Za posodobitev konfiguracijskih datotek na standard, ki ga uporablja pmr.si, naj
 
 ```bash
 cd /tmp
-wget -O update_svxlink.sh https://raw.githubusercontent.com/Kovojunior/Svxlink/main/update_svxlink.sh
+wget -O update_svxlink.sh https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/update_svxlink.sh
 sudo chmod +x update_svxlink.sh
 sudo bash ./update_svxlink.sh
 ```
