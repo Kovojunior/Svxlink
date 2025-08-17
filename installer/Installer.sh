@@ -4,8 +4,7 @@
 install_svxlink() {
     echo ""
     echo "=== Posodabljam repozitorije in nameščam potrebne knjižnice ==="
-    apt update
-    apt upgrade -y
+    apt update && apt upgrade -y
     apt install -y g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
         tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev \
         librtlsdr-dev doxygen groff alsa-utils vorbis-tools curl \
@@ -50,6 +49,42 @@ install_svxlink() {
 }
 
 update_svxlink() {
+    MODE=$1   # full_install ali update_svxlink
+
+    # Mapo za varnostne kopije ustvarimo, če ne obstaja
+    BACKUP_DIR="/etc/svxlink_backups"
+
+    # Datoteke za morebitno varnostno kopiranje
+    declare -A FILES_TO_BACKUP=(
+        ["Frn.tcl"]="/usr/share/svxlink/events.d/Frn.tcl"
+        ["Logic.tcl"]="/usr/share/svxlink/events.d/Logic.tcl"
+        ["Module.tcl"]="/usr/share/svxlink/events.d/Module.tcl"
+        ["ModuleFrn.conf"]="/etc/svxlink/svxlink.d/ModuleFrn.conf"
+        ["ModuleParrot.conf"]="/etc/svxlink/svxlink.d/ModuleParrot.conf"
+        ["SimplexLogic.tcl"]="/usr/share/svxlink/events.d/SimplexLogic.tcl"
+        ["svxlink.conf"]="/etc/svxlink/svxlink.conf"
+    )
+
+    echo -e "🔧 Začenja se posodobitev Svxlink konfiguracijskih datotek na standard PMR.SI\n" 
+
+    # Odločitve glede varnostnega kopiranja
+    if [ "$MODE" == "full_install" ]; then
+        BACKUP_CHOICE="n"
+    else
+        read -p "⚠️ Želite izvesti varnostno kopiranje konfiguracijskih datotek pred posodobitvijo? (y/n): " BACKUP_CHOICE
+    fi
+
+    if [ "$BACKUP_CHOICE" == "y" ]; then
+        echo "📦 Ustvarjam varnostne kopije..."
+        mkdir -p "$BACKUP_DIR"
+        for FILE in "${!FILES_TO_BACKUP[@]}"; do
+            if [ -f "${FILES_TO_BACKUP[$FILE]}" ]; then
+                cp -v "${FILES_TO_BACKUP[$FILE]}" "$BACKUP_DIR/$FILE"
+            fi
+        done
+        echo "✅ Varnostne kopije so narejene v $BACKUP_DIR"
+    fi
+
     TMP_SCRIPT="/tmp/update_svxlink.sh"
     URL="https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/update_svxlink.sh"
 
@@ -73,13 +108,17 @@ update_svxlink() {
     echo -e "✅ Posodobitev Svxlink zaključena!\n"
 }
 
-
 # Funkcija za odstranitev Svxlink
 remove_svxlink() {
-    echo "=== Ustavljam storitev ==="
-    systemctl stop svxlink 2>/dev/null
+    read -p "⚠️ Nahajate se v nevarnih vodah. Skripta bo pobrisala vse podatke, odstranila program Svxlink, konfiguratorje in vse knjižnice, ki so z njim povezane (razen WireGuard). Ste prepričani? Pritisnite Enter za nadaljevanje ali CTRL+C za prekinitev..." 
 
-    echo "=== Odstranjujem paket in knjižnice ==="
+    echo ""
+    echo "=== Ustavljam storitev Svxlink in HealthCheck ==="
+    systemctl stop svxlink 2>/dev/null
+    systemctl stop svxlink_healthcheck.service 2>/dev/null
+
+    echo ""
+    echo "=== Odstranjujem paket in knjižnice povezane s Svxlink ==="
     apt purge -y svxlink* g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
         tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev \
         librtlsdr-dev doxygen groff alsa-utils vorbis-tools curl \
@@ -87,20 +126,25 @@ remove_svxlink() {
         libssl-dev ladspa-sdk
     apt autoremove -y
 
+    echo ""
     echo "=== Brisem uporabnika svxlink ==="
     deluser --remove-home svxlink 2>/dev/null
 
-    echo "=== Brisem svxlink healthcheck ==="
+    echo ""
+    echo "=== Brisem HealthCheck storitev ==="
     systemctl disable svxlink_healthcheck.service 2>/dev/null
     rm -f /etc/systemd/system/svxlink_healthcheck.service
     rm -f /usr/local/bin/svxlink_healthcheck.sh
     systemctl daemon-reload
 
-    echo "=== Brisem mape ==="
-    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink
+    echo ""
+    echo "=== Brisem mape Svxlink ==="
+    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink /tmp/AIOC_settings.bash /tmp/FRN_settings.bash
 
-    echo -e "✅ Svxlink in vse povezane datoteke odstranjene!\n"
+    echo ""
+    echo -e "✅ Svxlink, konfiguracije in HealthCheck so odstranjeni!\n"
 }
+
 
 # Funkcija za healthcheck
 install_healthcheck() {
@@ -188,12 +232,20 @@ install_frn_settings() {
     echo ""
 }
 
+# Wireguard namestitev brez konfiguracije
+install_wireguard() {
+    echo "🔧 Začenjam wireguard namestitev..."
+    apt install wireguard
+    echo ""
+    echo -e "⚠️ Konfiguracijskih datotek zaradi varnostne grožnje ni mogoče naložiti na splet. Za nastavitev piši na info@pmr446.si\n"
+}
+
 # Namesti vse
 full_install() {
-    echo "🚀 Začenjam popolno namestitev Svxlink programa na PMR.SI standard."
+    read -p "🚀 Začenjam popolno namestitev Svxlink programa na PMR.SI standard. Pritisnite Enter za nadaljevanje..."
 
     install_svxlink
-    update_svxlink
+    update_svxlink "full_install"
     echo ""
     read -p "⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje..." 
     install_aioc_settings
@@ -207,23 +259,32 @@ full_install() {
     systemctl status svxlink
     echo ""
 
+    install_wireguard
+
+    echo ""
     echo -e "✅ Popolna namestitev končana!\n"
 }
 
 # Glavni meni
 OPTION=$(whiptail --title "SVXLINK - PMR.SI Setup" --menu "Izberi možnost:" 15 70 4 \
-"1" "Namesti vse (2,3,4 + AIOC + FRN)" \
+"1" "Namesti vse (2,3,4,5,6,7)" \
 "2" "Namesti Svxlink" \
-"3" "Posodobi Svxlink na PMR.SI standard" \
+"3" "Posodobi Svxlink konfiguracijske datoteke" \
 "4" "Namesti HealthCheck za Svxlink" \
-"5" "Odstrani Svxlink in knjižnice" 3>&1 1>&2 2>&3)
+"5" "Namesti AIOC konfigurator za Svxlink" \
+"6" "Namesti FRN konfigurator za Svxlink" \
+"7" "Namesti WireGuard" \
+"8" "Odstrani Svxlink, povezane programe in knjižnice" 3>&1 1>&2 2>&3)
 
 case $OPTION in
     1) full_install ;;
     2) install_svxlink ;;
     3) update_svxlink ;;
     4) install_healthcheck ;;
-    5) remove_svxlink ;;
+    5) install_aioc_settings ;;
+    6) install_frn_settings ;;
+    7) install_wireguard ;;
+    8) remove_svxlink ;;
     *) echo "Preklicano." ;;
 esac
 
