@@ -11,7 +11,7 @@ PTT_DEVICE=$(ls /dev/ttyACM* 2>/dev/null | head -n1)
 
 # Preveri, če so podatki najdeni
 if [ -z "$PLAYBACK_CARD" ] || [ -z "$CAPTURE_CARD" ] || [ -z "$PTT_DEVICE" ]; then
-    echo "❌ Napaka: ni najden en od potrebnih podatkov (playback, capture ali PTT)."
+    echo -e "\n❌ Napaka: ni najden en od potrebnih podatkov (playback, capture ali PTT).\n"
     exit 1
 fi
 
@@ -26,4 +26,4 @@ sed -i "s|^PTT_PORT=.*|PTT_PORT=$PTT_DEVICE|g" "$CONFIG_FILE"
 echo "✅ Konfiguracija posodobljena:"
 echo "  AUDIO_DEV=alsa:plughw:$PLAYBACK_CARD"
 echo "  CAPTURE_DEV=alsa:plughw:$CAPTURE_CARD"
-echo "  PTT_PORT=$PTT_DEVICE"
+echo -e "  PTT_PORT=$PTT_DEVICE\n"

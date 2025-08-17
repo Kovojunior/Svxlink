@@ -4,6 +4,7 @@
 install_svxlink() {
     echo "=== Posodabljam repozitorije in nameščam potrebne knjižnice ==="
     apt update
+    apt upgrade
     apt install -y g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
         tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev \
         librtlsdr-dev doxygen groff alsa-utils vorbis-tools curl \
@@ -62,7 +63,7 @@ update_svxlink() {
     systemctl restart svxlink
 
     # Po izvedbi
-    echo "✅ Posodobitev Svxlink zaključena!"
+    echo -e "✅ Posodobitev Svxlink zaključena!\n"
 }
 
 
@@ -89,9 +90,9 @@ remove_svxlink() {
     systemctl daemon-reload
 
     echo "=== Brisem mape ==="
-    sudo rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink
+    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink
 
-    echo "✅ Svxlink in vse povezane datoteke odstranjene!"
+    echo -e "✅ Svxlink in vse povezane datoteke odstranjene!\n"
 }
 
 # Funkcija za healthcheck
@@ -158,9 +159,9 @@ install_aioc_settings() {
     wget -O /tmp/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
     chmod +x /tmp/AIOC_settings.bash
     if bash /tmp/AIOC_settings.bash; then
-        echo "✅ AIOC konfiguracija uspešno izvedena."
+        echo -e "✅ AIOC konfiguracija uspešno izvedena.\n"
     else
-        echo "❌ Pri AIOC konfiguraciji je prišlo do napake."
+        echo -e "\n❌ Pri AIOC konfiguraciji je prišlo do napake.\n"
     fi
 }
 
@@ -183,7 +184,7 @@ full_install() {
     install_aioc_settings
     install_frn_settings
 
-    echo "✅ Popolna namestitev končana!"
+    echo -e "✅ Popolna namestitev končana!\n"
 }
 
 # Glavni meni

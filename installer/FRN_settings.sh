@@ -34,7 +34,7 @@ read_existing() {
 
 # Preveri, ali datoteka obstaja
 if [ ! -f "$CONF_FILE" ]; then
-    echo "❌ Konfiguracijska datoteka $CONF_FILE ne obstaja."
+    echo -e "\n❌ Konfiguracijska datoteka $CONF_FILE ne obstaja.\n"
     exit 1
 fi
 
@@ -142,3 +142,4 @@ echo "✅ CALLSIGN posodobljen v /etc/svxlink/svxlink.conf (backup: /etc/svxlink
 echo ""
 echo "📄 Posodobljena konfiguracija ModuleFrn:"
 cat "$CONF_FILE"
+echo ""
