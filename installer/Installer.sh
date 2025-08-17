@@ -5,17 +5,7 @@ install_svxlink() {
     echo ""
     echo -e "\e[1;34m=== Posodabljam repozitorije in nameščam potrebne knjižnice ===\e[0m"
 
-    # Ujemi izhod ukazov
-    #UPDATE_OUTPUT=$(apt update -y 2>&1)
-    #UPGRADE_OUTPUT=$(apt upgrade -y 2>&1)
-
-    # Preveri, če so vsi paketi že posodobljeni
-    #if echo "$UPGRADE_OUTPUT" | grep -q "0 upgraded, 0 newly installed"; then
-    #    echo -e "\e[1;33m✅ Vsi paketi so že posodobljeni, preskakujem.\e[0m"
-    #else
-    #    echo "$UPDATE_OUTPUT"
-    #   echo "$UPGRADE_OUTPUT"
-    #fi
+    apt update && apt upgrade -y
 
     apt install -y g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
         tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev \
@@ -232,11 +222,12 @@ install_aioc_settings() {
     echo -e "\e[1;34m🔧 Začenjam AIOC konfiguracijo...\e[0m"
     wget -O /tmp/svxlink_install/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
     chmod +x /tmp/svxlink_install/AIOC_settings.bash
-    if bash /tmp/svxlink_install/AIOC_settings.bash; then
-        echo -e $'\e[1;32m✅ AIOC konfiguracija uspešno izvedena.\e[0m\n'
+    bash /tmp/svxlink_install/AIOC_settings.bash
+    status=$?
+    if [ $status -eq 0 ]; then
+        echo -e "\e[1;32m✅ AIOC konfiguracija uspešno izvedena.\e[0m"
     else
-        echo ""
-        echo -e $'\e[1;37;41m❌ Pri AIOC konfiguraciji je prišlo do napake. Preveri stanje USB naprav z lsusb.\e[0m\n'
+        echo -e "\e[1;37;41m❌ Pri AIOC konfiguraciji je prišlo do napake (status=$status).\e[0m"
     fi
 }
 
