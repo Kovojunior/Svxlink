@@ -89,7 +89,7 @@ remove_svxlink() {
     systemctl daemon-reload
 
     echo "=== Brisem mape ==="
-    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink
+    sudo rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink
 
     echo "✅ Svxlink in vse povezane datoteke odstranjene!"
 }
