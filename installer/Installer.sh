@@ -223,7 +223,7 @@ install_aioc_settings() {
         echo -e $'\e[1;32m✅ AIOC konfiguracija uspešno izvedena.\e[0m\n'
     else
         echo ""
-        echo -e $'\e[1;37;41m❌ Pri AIOC konfiguraciji je prišlo do napake.\e[0m\n'
+        echo -e $'\e[1;37;41m❌ Pri AIOC konfiguraciji je prišlo do napake. Preveri stanje USB naprav z lsusb.\e[0m\n'
     fi
 }
 
