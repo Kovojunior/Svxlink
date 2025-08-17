@@ -42,7 +42,7 @@ install_svxlink() {
 
 update_svxlink() {
     TMP_SCRIPT="/tmp/update_svxlink.sh"
-    URL="https://raw.githubusercontent.com/Kovojunior/Svxlink/main/update_svxlink.sh"
+    URL="https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/update_svxlink.sh"
 
     echo "=== Nalagam PMR.SI datoteke ==="
 
