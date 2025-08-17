@@ -37,5 +37,5 @@ done
 systemctl restart svxlink
 
 sleep 3
-echo ""
-echo -e $'\e[1;32m✅ - Posodobitev končana!\e[0m\n'
+#echo ""
+#echo -e $'\e[1;32m✅ - Posodobitev končana!\e[0m\n'
