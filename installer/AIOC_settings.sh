@@ -28,9 +28,3 @@ echo -e $'\e[1;32m✅ Konfiguracija posodobljena:\e[0m'
 echo "  AUDIO_DEV=alsa:plughw:$PLAYBACK_CARD"
 echo "  CAPTURE_DEV=alsa:plughw:$CAPTURE_CARD"
 echo -e "  PTT_PORT=$PTT_DEVICE\n"
-
-systemctl restart svxlink
-sleep 1
-echo -e "\e[1;34mStanje Svxlink programa po posodobitvi: \e[0m" 
-systemctl status svxlink
-echo ""
