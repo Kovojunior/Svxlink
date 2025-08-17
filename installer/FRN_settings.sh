@@ -35,7 +35,7 @@ read_existing() {
 # Preveri, ali datoteka obstaja
 if [ ! -f "$CONF_FILE" ]; then
     echo ""
-    echo -e "❌ Konfiguracijska datoteka $CONF_FILE ne obstaja.\n"
+    echo -e "\e[1;37;41m❌ Konfiguracijska datoteka $CONF_FILE ne obstaja.\e[0m\n"    
     exit 1
 fi
 
@@ -139,8 +139,8 @@ else
 fi
 
 echo ""
-echo "✅ ModuleFrn konfiguracija je posodobljena v $CONF_FILE (backup: ${CONF_FILE}.bak)"
-echo "✅ CALLSIGN posodobljen v /etc/svxlink/svxlink.conf (backup: /etc/svxlink/svxlink.conf.bak)"
+echo -e $'\e[1;32m✅ ModuleFrn konfiguracija je posodobljena v '"$CONF_FILE"' (backup: '"${CONF_FILE}.bak"')\e[0m'
+echo -e $'\e[1;32m✅ CALLSIGN posodobljen v /etc/svxlink/svxlink.conf (backup: /etc/svxlink/svxlink.conf.bak)\e[0m'
 echo ""
 echo "📄 Posodobljena konfiguracija ModuleFrn:"
 cat "$CONF_FILE"

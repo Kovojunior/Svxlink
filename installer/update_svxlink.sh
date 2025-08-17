@@ -27,7 +27,7 @@ for url in "${!files[@]}"; do
         echo "✅ - Uspešno posodobljeno: $target"
     else
         echo ""
-        echo -e "❌ - Napaka pri prenosu: $url\n"
+        echo -e "\e[1;37;41m❌ - Napaka pri prenosu: $url\e[0m\n"
     fi
     
     # Nastavi pravilna dovoljenja
@@ -37,4 +37,4 @@ done
 # Ponovni zagon storitve
 systemctl restart svxlink
 
-echo -e "✅ - Posodobitev končana!\n"
+echo -e $'\e[1;32m✅ - Posodobitev končana!\e[0m\n'

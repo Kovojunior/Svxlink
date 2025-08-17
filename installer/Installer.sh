@@ -71,7 +71,7 @@ update_svxlink() {
     if [ "$MODE" == "full_install" ]; then
         BACKUP_CHOICE="n"
     else
-        read -p "⚠️ Želite izvesti varnostno kopiranje konfiguracijskih datotek pred posodobitvijo? (y/n): " BACKUP_CHOICE
+        read -p $'\e[1;33m⚠️ Želite izvesti varnostno kopiranje konfiguracijskih datotek pred posodobitvijo? (y/n): \e[0m' BACKUP_CHOICE
     fi
 
     if [ "$BACKUP_CHOICE" == "y" ]; then
@@ -82,7 +82,7 @@ update_svxlink() {
                 cp -v "${FILES_TO_BACKUP[$FILE]}" "$BACKUP_DIR/$FILE"
             fi
         done
-        echo "✅ Varnostne kopije so narejene v $BACKUP_DIR"
+        echo -e $'\e[1;32m✅ Varnostne kopije so narejene v '"$BACKUP_DIR"$'\e[0m'
     fi
 
     TMP_SCRIPT="/tmp/update_svxlink.sh"
@@ -94,7 +94,7 @@ update_svxlink() {
     # Prenos skripte v /tmp
     wget -q -O "$TMP_SCRIPT" "$URL"
     if [ $? -ne 0 ]; then
-        echo "❌ Napaka pri prenosu skripte!"
+    echo -e "\e[1;37;41m❌ Napaka pri prenosu skripte\e[0m\n"
         return 1
     fi
 
@@ -105,12 +105,12 @@ update_svxlink() {
     bash "$TMP_SCRIPT"
 
     # Po izvedbi
-    echo -e "✅ Posodobitev Svxlink zaključena!\n"
+    echo -e $'\e[1;32m✅ Posodobitev Svxlink zaključena!\e[0m\n'
 }
 
 # Funkcija za odstranitev Svxlink
 remove_svxlink() {
-    read -p "⚠️ Nahajate se v nevarnih vodah. Skripta bo pobrisala vse podatke, odstranila program Svxlink, konfiguratorje in vse knjižnice, ki so z njim povezane (razen WireGuard). Ste prepričani? Pritisnite Enter za nadaljevanje ali CTRL+C za prekinitev..." 
+    read -p $'\e[1;33m⚠️ Nahajate se v nevarnih vodah. Skripta bo pobrisala vse podatke, odstranila program Svxlink, konfiguratorje in vse knjižnice, ki so z njim povezane (razen WireGuard). Ste prepričani? Pritisnite Enter za nadaljevanje ali CTRL+C za prekinitev...\e[0m' 
 
     echo ""
     echo "=== Ustavljam storitev Svxlink in HealthCheck ==="
@@ -142,7 +142,7 @@ remove_svxlink() {
     rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink /tmp/AIOC_settings.bash /tmp/FRN_settings.bash
 
     echo ""
-    echo -e "✅ Svxlink, konfiguracije in HealthCheck so odstranjeni!\n"
+    echo -e $'\e[1;32m✅ Svxlink, konfiguracije in HealthCheck so odstranjeni!\e[0m\n'
 }
 
 
@@ -203,7 +203,7 @@ EOF
     sleep 1 
     systemctl status svxlink_healthcheck.service   
 
-    echo -e "✅ Healthcheck nameščen in zagnan!\n"
+echo -e $'\e[1;32m✅ Healthcheck nameščen in zagnan!\e[0m\n'
 }
 
 # AIOC konfiguracija (neinteraktivna)
@@ -212,10 +212,10 @@ install_aioc_settings() {
     wget -O /tmp/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
     chmod +x /tmp/AIOC_settings.bash
     if bash /tmp/AIOC_settings.bash; then
-        echo -e "✅ AIOC konfiguracija uspešno izvedena.\n"
+        echo -e $'\e[1;32m✅ AIOC konfiguracija uspešno izvedena.\e[0m\n'
     else
         echo ""
-        echo -e "❌ Pri AIOC konfiguraciji je prišlo do napake.\n"
+        echo -e $'\e[1;37;41m❌ Pri AIOC konfiguraciji je prišlo do napake.\e[0m\n'
     fi
 }
 
@@ -242,13 +242,13 @@ install_wireguard() {
 
 # Namesti vse
 full_install() {
-    read -p "🚀 Začenjam popolno namestitev Svxlink programa na PMR.SI standard. Pritisnite Enter za nadaljevanje..."
+    read -p $'\e[1;33m🚀 Začenjam popolno namestitev Svxlink programa na PMR.SI standard. Pritisnite Enter za nadaljevanje ali CTRL+C za prekinitev...\e[0m'
 
     install_svxlink
     update_svxlink "full_install"
     echo ""
-    read -p "⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje..." 
-    install_aioc_settings
+    read -p $'\e[1;33m⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje...\e[0m\n'    install_aioc_settings
+    
     install_frn_settings
     install_healthcheck
 
@@ -262,7 +262,7 @@ full_install() {
     install_wireguard
 
     echo ""
-    echo -e "✅ Popolna namestitev končana!\n"
+    echo -e $'\e[1;32m✅ Popolna namestitev končana!\e[0m\n'
 }
 
 # Glavni meni
