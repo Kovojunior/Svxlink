@@ -150,6 +150,7 @@ remove_svxlink() {
 
 # Funkcija za healthcheck
 install_healthcheck() {
+    echo ""
     echo -e "\e[1;34m=== Nameščam healthcheck skripto ===\e[0m"
 
     cat <<'EOF' > /usr/local/bin/svxlink_healthcheck.sh
@@ -204,6 +205,7 @@ EOF
     systemctl start svxlink_healthcheck.service
     sleep 1 
 
+    echo ""
     echo -e "\e[1;34mStanje Svxlink_healthCheck skripte po namestitvi:\e[0m"
     systemctl status svxlink_healthcheck.service --no-pager --lines=0
     journalctl -u svxlink_healthcheck.service -n 5 --no-pager
