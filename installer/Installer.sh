@@ -226,11 +226,6 @@ install_frn_settings() {
     wget -O /tmp/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
     chmod +x /tmp/FRN_settings.bash
     bash /tmp/FRN_settings.bash
-    systemctl restart svxlink
-    sleep 1
-    echo -e "\e[1;34mStanje Svxlink programa po posodobitvi: \e[0m" 
-    systemctl status svxlink
-    echo ""
 }
 
 # Wireguard namestitev brez konfiguracije
