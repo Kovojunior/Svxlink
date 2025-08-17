@@ -2,7 +2,8 @@
 
 # Funkcija za namestitev Svxlink
 install_svxlink() {
-    echo -e "\n=== Posodabljam repozitorije in nameščam potrebne knjižnice ==="
+    echo ""
+    echo "=== Posodabljam repozitorije in nameščam potrebne knjižnice ==="
     apt update
     apt upgrade -y
     apt install -y g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
@@ -11,10 +12,13 @@ install_svxlink() {
         libcurl4-openssl-dev git rtl-sdr libjsoncpp-dev libgpiod-dev \
         libssl-dev ladspa-sdk
 
-    echo -e "\n=== Dodajam uporabnika svxlink ==="
+    echo ""
+    echo "=== Dodajam uporabnika svxlink ==="
     id -u svxlink &>/dev/null || useradd -rG audio,plugdev,dialout svxlink
+    groups svxlink
 
-    echo -e "\n=== Kloniram repozitorij Svxlink ==="
+    echo ""
+    echo "=== Kloniram repozitorij Svxlink ==="
     cd /usr/src || exit 1
     if [ ! -d "svxlink" ]; then
         git clone http://github.com/sm0svx/svxlink.git
@@ -23,7 +27,8 @@ install_svxlink() {
     git fetch
     git checkout 25.05.1
 
-    echo -e "\n=== Gradim paket ==="
+    echo ""
+    echo "=== Gradim paket ==="
     mkdir -p src/build
     cd src/build || exit 1
     cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr \
@@ -31,12 +36,15 @@ install_svxlink() {
         -DWITH_SYSTEMD=ON -DCPACK_GENERATOR=DEB ..
     make -j"$(nproc)" all doc package
 
-    echo -e "\n=== Nameščam paket ==="
+    echo ""
+    echo "=== Nameščam paket ==="
     dpkg -i svxlink-25.05.1-Linux.deb
 
-    echo -e "\n=== Nalagam zvoke ==="
+    echo ""
+    echo "=== Nalagam zvoke ==="
     cd /usr/share/svxlink/sounds/ || exit 1
     curl -LO https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/24.02/svxlink-sounds-en_US-heather-16k-24.02.tar.bz2
+    echo ""
     tar xvjf svxlink-sounds-en_US-heather-16k-24.02.tar.bz2
     ln -sfn en_US-heather-16k en_US
 }
@@ -45,7 +53,8 @@ update_svxlink() {
     TMP_SCRIPT="/tmp/update_svxlink.sh"
     URL="https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/update_svxlink.sh"
 
-    echo -e "\n=== Nalagam PMR.SI datoteke ==="
+    echo ""
+    echo "=== Nalagam PMR.SI datoteke ==="
 
     # Prenos skripte v /tmp
     wget -q -O "$TMP_SCRIPT" "$URL"
@@ -161,7 +170,8 @@ install_aioc_settings() {
     if bash /tmp/AIOC_settings.bash; then
         echo -e "✅ AIOC konfiguracija uspešno izvedena.\n"
     else
-        echo -e "\n❌ Pri AIOC konfiguraciji je prišlo do napake.\n"
+        echo ""
+        echo -e "❌ Pri AIOC konfiguraciji je prišlo do napake.\n"
     fi
 }
 
@@ -180,6 +190,7 @@ full_install() {
     install_svxlink
     update_svxlink
     install_healthcheck
+    echo ""
     read -p "⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje..." 
     install_aioc_settings
     install_frn_settings

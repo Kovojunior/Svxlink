@@ -138,6 +138,7 @@ else
     echo "CALLSIGN=$CALLSIGN" >> /etc/svxlink/svxlink.conf
 fi
 
+echo ""
 echo "✅ ModuleFrn konfiguracija je posodobljena v $CONF_FILE (backup: ${CONF_FILE}.bak)"
 echo "✅ CALLSIGN posodobljen v /etc/svxlink/svxlink.conf (backup: /etc/svxlink/svxlink.conf.bak)"
 echo ""
