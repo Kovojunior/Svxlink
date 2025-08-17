@@ -4,8 +4,8 @@
 install_svxlink() {
     echo ""
     echo -e "\e[1;34m=== Posodabljam repozitorije in nameščam potrebne knjižnice ===\e[0m"
-    apt update && upgrade -y
-    apt update && upgrade -y # TO-DO, včasih javi napako pri prvem zagonu apt update
+    apt update -y && apt upgrade -y
+    apt update -y && apt upgrade -y # TO-DO, včasih javi napako pri prvem zagonu apt update
     apt install -y g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
         tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev \
         librtlsdr-dev doxygen groff alsa-utils vorbis-tools curl \
@@ -66,7 +66,8 @@ update_svxlink() {
         ["svxlink.conf"]="/etc/svxlink/svxlink.conf"
     )
 
-    echo -e "\e[1;34m🔧 Začenja se posodobitev Svxlink konfiguracijskih datotek na standard PMR.SI\n\e[0m" 
+    echo ""
+    echo -e "\e[1;34m🔧 Začenja se posodobitev Svxlink konfiguracijskih datotek na standard PMR.SI\e[0m" 
 
     # Odločitve glede varnostnega kopiranja
     if [ "$MODE" == "full_install" ]; then
@@ -202,13 +203,18 @@ EOF
     systemctl enable svxlink_healthcheck.service
     systemctl start svxlink_healthcheck.service
     sleep 1 
-    systemctl status svxlink_healthcheck.service   
 
-echo -e $'\e[1;32m✅ Healthcheck nameščen in zagnan!\e[0m\n'
+    echo -e "\e[1;34mStanje Svxlink_healthCheck skripte po namestitvi:\e[0m"
+    systemctl status svxlink_healthcheck.service --no-pager --lines=0
+    journalctl -u svxlink_healthcheck.service -n 5 --no-pager
+
+    echo ""
+    echo -e $'\e[1;32m✅ Healthcheck nameščen in zagnan!\e[0m\n'
 }
 
 # AIOC konfiguracija (neinteraktivna)
 install_aioc_settings() {
+    echo ""
     echo -e "\e[1;34m🔧 Začenjam AIOC konfiguracijo...\e[0m"
     wget -O /tmp/svxlink_install/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
     chmod +x /tmp/svxlink_install/AIOC_settings.bash
@@ -222,6 +228,7 @@ install_aioc_settings() {
 
 # FRN konfiguracija (interaktivna)
 install_frn_settings() {
+    echo ""
     echo -e "\e[1;34m🔧 Začenjam FRN konfiguracijo (interaktivno)...\e[0m"
     wget -O /tmp/svxlink_install/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
     chmod +x /tmp/svxlink_install/FRN_settings.bash
@@ -249,10 +256,14 @@ full_install() {
     install_healthcheck
 
     echo -e "\e[1;34mStatus HealthCheck skripte: \e[0m"
-    systemctl status svxlink_healthcheck.service
+    systemctl status svxlink_healthcheck.service --no-pager --lines=0
+    journalctl -u svxlink_healthcheck.service -n 8 --no-pager
     echo ""
-    echo -e "\e[1;34mStatus Svxlink programa: \e[0m"
-    systemctl status svxlink
+
+    echo -e "\e[1;34mStatus Svxlink programa:\e[0m"
+    systemctl status svxlink --no-pager --lines=0
+    echo -e "\n\e[1;34mZadnjih 5 vrstic dnevnika:\e[0m"
+    journalctl -u svxlink -n 8 --no-pager
     echo ""
 
     install_wireguard

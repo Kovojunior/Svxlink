@@ -26,7 +26,6 @@ for url in "${!files[@]}"; do
     if [ $? -eq 0 ]; then
         echo -e "\e[1;32m✅ - Uspešno posodobljeno: $target\e[0m"
     else
-        echo ""
         echo -e "\e[1;37;41m❌ - Napaka pri prenosu: $url\e[0m\n"
     fi
     
@@ -37,4 +36,5 @@ done
 # Ponovni zagon storitve
 systemctl restart svxlink
 
+echo ""
 echo -e $'\e[1;32m✅ - Posodobitev končana!\e[0m\n'

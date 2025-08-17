@@ -146,10 +146,12 @@ echo -e "\e[1;34m📄 Posodobljena konfiguracija ModuleFrn:\e[0m"
 cat "$CONF_FILE" | while IFS= read -r line; do
     echo -e "\e[1;34m$line\e[0m"
 done
-echo ""
 
 systemctl restart svxlink
 sleep 1
-echo -e "\e[1;34mStanje Svxlink programa po posodobitvi: \e[0m" 
-systemctl status svxlink
+
+echo -e "\e[1;34mStanje Svxlink programa po posodobitvi:\e[0m"
+systemctl status svxlink --no-pager --lines=0
+journalctl -u svxlink -n 8 --no-pager
 echo ""
+
