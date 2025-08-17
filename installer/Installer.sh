@@ -69,8 +69,6 @@ update_svxlink() {
     # Izvedemo skripto
     bash "$TMP_SCRIPT"
 
-    systemctl restart svxlink
-
     # Po izvedbi
     echo -e "✅ Posodobitev Svxlink zaključena!\n"
 }
@@ -158,6 +156,8 @@ EOF
     systemctl daemon-reload
     systemctl enable svxlink_healthcheck.service
     systemctl start svxlink_healthcheck.service
+    sleep 1 
+    systemctl status svxlink_healthcheck.service   
 
     echo -e "✅ Healthcheck nameščen in zagnan!\n"
 }
@@ -182,6 +182,10 @@ install_frn_settings() {
     chmod +x /tmp/FRN_settings.bash
     bash /tmp/FRN_settings.bash
     systemctl restart svxlink
+    sleep 1
+    echo "Stanje Svxlink programa po posodobitvi: " 
+    systemctl status svxlink
+    echo ""
 }
 
 # Namesti vse
@@ -195,6 +199,13 @@ full_install() {
     install_aioc_settings
     install_frn_settings
     install_healthcheck
+
+    echo "Status HealthCheck skripte: "
+    systemctl status svxlink_healthcheck.service
+    echo ""
+    echo "Status Svxlink programa: "
+    systemctl status svxlink
+    echo ""
 
     echo -e "✅ Popolna namestitev končana!\n"
 }
