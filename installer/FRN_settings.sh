@@ -34,7 +34,8 @@ read_existing() {
 
 # Preveri, ali datoteka obstaja
 if [ ! -f "$CONF_FILE" ]; then
-    echo -e "\n❌ Konfiguracijska datoteka $CONF_FILE ne obstaja.\n"
+    echo ""
+    echo -e "❌ Konfiguracijska datoteka $CONF_FILE ne obstaja.\n"
     exit 1
 fi
 

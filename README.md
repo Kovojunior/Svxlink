@@ -23,13 +23,8 @@ Ker je različica v uradnih Debian repozitorijih pogosto zastarela, ta fork omog
 Za namestitev SvxLink forka na sistem:
 
 ```bash
-# Ustvari delovno mapo in prenesi skripto
 mkdir -p /tmp/svxlink_install && cd /tmp/svxlink_install
-
-# Prenesi Installer
 wget -O Installer.sh https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/Installer.sh
-
-# Nastavi dovoljenja in zaženi
 sudo chmod +x Installer.sh
 sudo bash Installer.sh
 ```

@@ -11,7 +11,8 @@ PTT_DEVICE=$(ls /dev/ttyACM* 2>/dev/null | head -n1)
 
 # Preveri, če so podatki najdeni
 if [ -z "$PLAYBACK_CARD" ] || [ -z "$CAPTURE_CARD" ] || [ -z "$PTT_DEVICE" ]; then
-    echo -e "\n❌ Napaka: ni najden en od potrebnih podatkov (playback, capture ali PTT).\n"
+    echo ""
+    echo -e "❌ Napaka: ni najden en od potrebnih podatkov (playback, capture ali PTT).\n"
     exit 1
 fi
 
