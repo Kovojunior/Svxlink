@@ -13,7 +13,7 @@ PTT_DEVICE=$(ls /dev/ttyACM* 2>/dev/null | head -n1)
 if [ -z "$PLAYBACK_CARD" ] || [ -z "$CAPTURE_CARD" ] || [ -z "$PTT_DEVICE" ]; then
     echo ""
     echo -e "\e[1;37;41m❌ Napaka: potrebni podatki niso najdeni (playback, capture ali PTT).\e[0m\n"
-    exit 1
+    return 1
 fi
 
 # Naredi backup konfiguracije

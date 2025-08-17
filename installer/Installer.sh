@@ -208,6 +208,7 @@ EOF
     systemctl status svxlink_healthcheck.service --no-pager --lines=0
     journalctl -u svxlink_healthcheck.service -n 5 --no-pager
 
+    sleep 3
     echo ""
     echo -e $'\e[1;32m✅ Healthcheck nameščen in zagnan!\e[0m\n'
 }
