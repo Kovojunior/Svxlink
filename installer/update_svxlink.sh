@@ -36,4 +36,4 @@ done
 # Ponovni zagon storitve
 systemctl restart svxlink
 
-echo "✅ - Posodobitev končana!"
+echo -e "✅ - Posodobitev končana!\n"

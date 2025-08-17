@@ -2,19 +2,19 @@
 
 # Funkcija za namestitev Svxlink
 install_svxlink() {
-    echo "=== Posodabljam repozitorije in nameščam potrebne knjižnice ==="
+    echo -e "\n=== Posodabljam repozitorije in nameščam potrebne knjižnice ==="
     apt update
-    apt upgrade
+    apt upgrade -y
     apt install -y g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
         tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev \
         librtlsdr-dev doxygen groff alsa-utils vorbis-tools curl \
         libcurl4-openssl-dev git rtl-sdr libjsoncpp-dev libgpiod-dev \
         libssl-dev ladspa-sdk
 
-    echo "=== Dodajam uporabnika svxlink ==="
+    echo -e "\n=== Dodajam uporabnika svxlink ==="
     id -u svxlink &>/dev/null || useradd -rG audio,plugdev,dialout svxlink
 
-    echo "=== Kloniram repozitorij Svxlink ==="
+    echo -e "\n=== Kloniram repozitorij Svxlink ==="
     cd /usr/src || exit 1
     if [ ! -d "svxlink" ]; then
         git clone http://github.com/sm0svx/svxlink.git
@@ -23,7 +23,7 @@ install_svxlink() {
     git fetch
     git checkout 25.05.1
 
-    echo "=== Gradim paket ==="
+    echo -e "\n=== Gradim paket ==="
     mkdir -p src/build
     cd src/build || exit 1
     cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr \
@@ -31,10 +31,10 @@ install_svxlink() {
         -DWITH_SYSTEMD=ON -DCPACK_GENERATOR=DEB ..
     make -j"$(nproc)" all doc package
 
-    echo "=== Nameščam paket ==="
+    echo -e "\n=== Nameščam paket ==="
     dpkg -i svxlink-25.05.1-Linux.deb
 
-    echo "=== Nalagam zvoke ==="
+    echo -e "\n=== Nalagam zvoke ==="
     cd /usr/share/svxlink/sounds/ || exit 1
     curl -LO https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/24.02/svxlink-sounds-en_US-heather-16k-24.02.tar.bz2
     tar xvjf svxlink-sounds-en_US-heather-16k-24.02.tar.bz2
@@ -45,7 +45,7 @@ update_svxlink() {
     TMP_SCRIPT="/tmp/update_svxlink.sh"
     URL="https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/update_svxlink.sh"
 
-    echo "=== Nalagam PMR.SI datoteke ==="
+    echo -e "\n=== Nalagam PMR.SI datoteke ==="
 
     # Prenos skripte v /tmp
     wget -q -O "$TMP_SCRIPT" "$URL"
@@ -150,7 +150,7 @@ EOF
     systemctl enable svxlink_healthcheck.service
     systemctl start svxlink_healthcheck.service
 
-    echo "✅ Healthcheck nameščen in zagnan!"
+    echo -e "✅ Healthcheck nameščen in zagnan!\n"
 }
 
 # AIOC konfiguracija (neinteraktivna)
