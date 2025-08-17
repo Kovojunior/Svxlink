@@ -155,7 +155,7 @@ EOF
 # AIOC konfiguracija (neinteraktivna)
 install_aioc_settings() {
     echo "🔧 Začenjam AIOC konfiguracijo..."
-    wget -O /tmp/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.bash
+    wget -O /tmp/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
     chmod +x /tmp/AIOC_settings.bash
     if bash /tmp/AIOC_settings.bash; then
         echo "✅ AIOC konfiguracija uspešno izvedena."
@@ -167,7 +167,7 @@ install_aioc_settings() {
 # FRN konfiguracija (interaktivna)
 install_frn_settings() {
     echo "🔧 Začenjam FRN konfiguracijo (interaktivno)..."
-    wget -O /tmp/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.bash
+    wget -O /tmp/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
     chmod +x /tmp/FRN_settings.bash
     bash /tmp/FRN_settings.bash
 }
