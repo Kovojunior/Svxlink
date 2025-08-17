@@ -181,6 +181,7 @@ install_frn_settings() {
     wget -O /tmp/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
     chmod +x /tmp/FRN_settings.bash
     bash /tmp/FRN_settings.bash
+    systemctl restart svxlink
 }
 
 # Namesti vse
@@ -189,11 +190,11 @@ full_install() {
 
     install_svxlink
     update_svxlink
-    install_healthcheck
     echo ""
     read -p "⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje..." 
     install_aioc_settings
     install_frn_settings
+    install_healthcheck
 
     echo -e "✅ Popolna namestitev končana!\n"
 }
