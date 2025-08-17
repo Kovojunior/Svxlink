@@ -152,20 +152,43 @@ EOF
     echo "✅ Healthcheck nameščen in zagnan!"
 }
 
+# AIOC konfiguracija (neinteraktivna)
+install_aioc_settings() {
+    echo "🔧 Začenjam AIOC konfiguracijo..."
+    wget -O /tmp/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.bash
+    chmod +x /tmp/AIOC_settings.bash
+    if bash /tmp/AIOC_settings.bash; then
+        echo "✅ AIOC konfiguracija uspešno izvedena."
+    else
+        echo "❌ Pri AIOC konfiguraciji je prišlo do napake."
+    fi
+}
+
+# FRN konfiguracija (interaktivna)
+install_frn_settings() {
+    echo "🔧 Začenjam FRN konfiguracijo (interaktivno)..."
+    wget -O /tmp/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.bash
+    chmod +x /tmp/FRN_settings.bash
+    bash /tmp/FRN_settings.bash
+}
+
 # Namesti vse
 full_install() {
-    echo "🚀 Začenjam popolno namestitev Svxlink + PMR.SI + healthcheck..."
+    echo "🚀 Začenjam popolno namestitev Svxlink programa na PMR.SI standard."
 
     install_svxlink
     update_svxlink
     install_healthcheck
+    read -p "⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje..." 
+    install_aioc_settings
+    install_frn_settings
 
     echo "✅ Popolna namestitev končana!"
 }
 
 # Glavni meni
 OPTION=$(whiptail --title "SVXLINK - PMR.SI Setup" --menu "Izberi možnost:" 15 70 4 \
-"1" "Namesti vse (2,3,4)" \
+"1" "Namesti vse (2,3,4 + AIOC + FRN)" \
 "2" "Namesti Svxlink" \
 "3" "Posodobi Svxlink na PMR.SI standard" \
 "4" "Namesti HealthCheck za Svxlink" \
@@ -179,3 +202,4 @@ case $OPTION in
     5) remove_svxlink ;;
     *) echo "Preklicano." ;;
 esac
+
