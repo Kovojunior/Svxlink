@@ -76,4 +76,4 @@ Uradna podpora repozitorija je za sistem: Armbian OS bookworm minimal 25.8.1 na 
 Pred uporabo AIOC se prepričajte, da je naprava pravilno priključena in pripravljena.
 Skripta uporablja sistemske pravice, zato je potreben sudo za namestitev in odstranjevanje.
 Skripta podpira avtomatsko gradnjo iz izvorne kode, kar zagotavlja najnovejše izboljšave in popravke.
-V kratkem bo skripta dobila podporo tudi mikroračunalniku OrangePi Zero3.
+V kratkem bo skripta dobila podporo tudi mikroračunalniku OrangePi Zero3 ter sistem Armbian OS trixie.

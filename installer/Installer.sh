@@ -254,8 +254,9 @@ full_install() {
 
     install_svxlink
     update_svxlink "full_install"
+
     echo ""
-    read -p $'\e[1;33m⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje...\e[0m\n'    
+    read -p $'\e[1;33m⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje...\e[0m'    
     install_aioc_settings
     
     install_frn_settings
@@ -286,6 +287,7 @@ OPTION=$(whiptail --title "SVXLINK - PMR.SI Setup" --menu "Izberi možnost:" 15 
 "4" "Namesti HealthCheck za Svxlink" \
 "5" "Namesti AIOC konfigurator za Svxlink" \
 "6" "Namesti FRN konfigurator za Svxlink" \
+
 "7" "Namesti WireGuard" \
 "8" "Odstrani Svxlink, povezane programe in knjižnice" 3>&1 1>&2 2>&3)
 

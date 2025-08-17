@@ -147,6 +147,7 @@ cat "$CONF_FILE" | while IFS= read -r line; do
     echo -e "\e[1;34m$line\e[0m"
 done
 
+sleep 5
 systemctl restart svxlink
 sleep 1
 
