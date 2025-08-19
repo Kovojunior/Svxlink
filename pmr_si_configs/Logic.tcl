@@ -5,7 +5,7 @@
 ###############################################################################
 
 #
-# A global variable used to store time for WDS signal timer and FRn restart timer.
+# A global variable used to store time for WDS signal timer and Frn restart timer.
 #
 variable frn_time_sec 0;
 variable wds_time_min 0;
@@ -790,6 +790,69 @@ if [info exists CFG_WDS_SIGNAL_INTERVAL] {
   }
 }
 
+
+###############################################################################
+# Custom event handlers for SvxLink (squelch + transmit logging)
+###############################################################################
+
+# --- SQUELCH HANDLER ---
+set squelch_open_time 0
+
+# Preimenujemo originalni proc squelch_open
+rename squelch_open squelch_open_core
+
+proc squelch_open {rx_id is_open} {
+    global squelch_open_time
+
+    # Klic originalne logike
+    #squelch_open_core $rx_id $is_open
+
+    if {$is_open} {
+        set squelch_open_time [clock milliseconds]
+        #puts ">>> [clock format [clock seconds] -format {%Y-%m-%d %H:%M:%S}] : Squelch OPEN"
+    } else {
+        if {![info exists squelch_open_time]} return
+        set now [clock milliseconds]
+        set duration_ms [expr {$now - $squelch_open_time}]
+        set duration_s [format "%.2f" [expr {$duration_ms / 1000.0}]]
+        puts ">>>  RX timer: $duration_s s"
+        if {$duration_s > 181} {
+            puts ">>> WARNING: RX timer exceeded pmr.si limitations (180s)"
+        }
+    }
+}
+
+# --- TRANSMIT HANDLER ---
+set tx_on_time 0
+
+# Preimenujemo originalni proc transmit
+rename transmit transmit_core
+
+proc transmit {is_on} {
+    global tx_on_time
+
+    # Klic originalne logike
+    #transmit_core $is_on
+
+    if {$is_on} {
+        set tx_on_time [clock milliseconds]
+        #puts ">>> [clock format [clock seconds] -format {%Y-%m-%d %H:%M:%S}] TX: ON"
+    } else {
+        if {![info exists tx_on_time]} return
+        set now [clock milliseconds]
+        set duration_ms [expr {$now - $tx_on_time}]
+        set duration_s [format "%.2f" [expr {$duration_ms / 1000.0}]]
+        puts ">>>  TX timer: $duration_s s"
+        if {$duration_s > 181} {
+            puts ">>> WARNING: TX timer exceeded pmr.si limitations (180s)"
+        }
+    }
+}
+
+
+###############################################################################
+#
+###############################################################################
 
 # end of namespace
 }
