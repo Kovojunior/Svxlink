@@ -287,7 +287,6 @@ OPTION=$(whiptail --title "SVXLINK - PMR.SI Setup" --menu "Izberi možnost:" 15 
 "4" "Namesti HealthCheck za Svxlink" \
 "5" "Namesti AIOC konfigurator za Svxlink" \
 "6" "Namesti FRN konfigurator za Svxlink" \
-
 "7" "Namesti WireGuard" \
 "8" "Odstrani Svxlink, povezane programe in knjižnice" 3>&1 1>&2 2>&3)
 
