@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Seznam datotek in njihovih ciljnih poti
+# List of files and their target paths
 declare -A files
 files=(
     ["https://github.com/Kovojunior/Svxlink/raw/main/pmr_si_configs/Frn.tcl"]="/usr/share/svxlink/events.d/Frn.tcl"
@@ -15,27 +15,27 @@ files=(
     ["https://github.com/Kovojunior/Svxlink/raw/main/pmrsi_sounds/pmrsi_16b.wav"]="/usr/share/svxlink/sounds/en_US/Frn/pmrsi_16b.wav"
 )
 
-# Preveri, ali mapa za zvoke obstaja, če ne, jo ustvari
+# Ensure the sound directory exists
 mkdir -p /usr/share/svxlink/sounds/en_US/Frn
 
-# Prenos in zamenjava datotek
+# Download and replace files
 for url in "${!files[@]}"; do
     target="${files[$url]}"
-    echo "Prenos $url -> $target"
+    echo "Downloading $url -> $target"
     wget -q -O "$target" "$url"
     if [ $? -eq 0 ]; then
-        echo -e "\e[1;32m✅ - Uspešno posodobljeno: $target\e[0m"
+        echo -e "\e[1;32m✅ - Successfully updated: $target\e[0m"
     else
-        echo -e "\e[1;37;41m❌ - Napaka pri prenosu: $url\e[0m\n"
+        echo -e "\e[1;37;41m❌ - Error downloading: $url\e[0m\n"
     fi
     
-    # Nastavi pravilna dovoljenja
+    # Set correct permissions
     chmod 644 "$target"
 done
 
-# Ponovni zagon storitve
+# Restart the Svxlink service
 systemctl restart svxlink
 
 sleep 3
 #echo ""
-#echo -e $'\e[1;32m✅ - Posodobitev končana!\e[0m\n'
+#echo -e $'\e[1;32m✅ - Update completed!\e[0m\n'

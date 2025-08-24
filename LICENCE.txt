@@ -1,5 +1,26 @@
-Creative Commons Attribution-NonCommercial 4.0 International Public License
+International (outside Slovenia)
+--------------------------------
+Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)
 
-By exercising the Licensed Rights (defined below), You accept and agree to be bound by the terms and conditions of this Creative Commons Attribution-NonCommercial 4.0 International Public License ("Public License"). To the extent this Public License may be interpreted as a contract, You are granted the Licensed Rights in consideration of Your acceptance of these terms and conditions, and the Licensor grants You such rights in consideration of benefits the Licensor receives from making the Licensed Material available under these terms and conditions.
+By exercising the Licensed Rights (defined below), You accept and agree to be bound by the terms and conditions of this Public License. To the extent this Public License may be interpreted as a contract, You are granted the Licensed Rights in consideration of Your acceptance of these terms and conditions, and the Licensor grants You such rights in consideration of benefits the Licensor receives from making the Licensed Material available under these terms and conditions.
 
-Full license text: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+Full license text:
+https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+
+Slovenia
+--------
+⚠ SPECIAL RESTRICTION FOR SLOVENIA ⚠
+
+- ALL RIGHTS of use, reproduction, modification, distribution, or adaptation are STRICTLY PROHIBITED within the territory of Slovenia, except for members of the CBRK OBALA community.  
+- CBRK OBALA community may ONLY use this code for the purpose of connecting nodes to the pmr.si server.  
+- Users in Slovenia who are not part of the CBRK OBALA community are NOT GRANTED ANY RIGHTS under this license.  
+- For RADIO AMATEUR USAGE in Slovenia, written permission is REQUIRED. Please contact: info@pmr446.si.
+
+No user in Slovenia, outside these exceptions, may use, copy, distribute, or modify these scripts or installers without explicit approval.
+
+
+Summary
+-------
+🌍 OUTSIDE SLOVENIA → Licensed under CC BY-NC 4.0  
+🇸🇮 IN SLOVENIA → NO RIGHTS GRANTED, unless part of the CBRK OBALA community (only for pmr.si node linking) or with explicit written approval from info@pmr446.si
