@@ -18,19 +18,24 @@ fi
 # Backup existing configuration
 cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
 
-# Update configuration
-sed -i "s|^AUDIO_DEV=.*|AUDIO_DEV=alsa:plughw:$PLAYBACK_CARD|g" "$CONFIG_FILE"
-sed -i "s|^CAPTURE_DEV=.*|CAPTURE_DEV=alsa:plughw:$CAPTURE_CARD|g" "$CONFIG_FILE"
-sed -i "s|^PTT_PORT=.*|PTT_PORT=$PTT_DEVICE|g" "$CONFIG_FILE"
+# --- Update ONLY Rx1 and Tx1 sections ---
+# Update Rx1 -> CAPTURE_DEV
+sed -i "/\[Rx1\]/,/^\[/ s|^AUDIO_DEV=.*|AUDIO_DEV=alsa:plughw:$CAPTURE_CARD|" "$CONFIG_FILE"
+
+# Update Tx1 -> PLAYBACK_DEV
+sed -i "/\[Tx1\]/,/^\[/ s|^AUDIO_DEV=.*|AUDIO_DEV=alsa:plughw:$PLAYBACK_CARD|" "$CONFIG_FILE"
+
+# Update Tx1 -> PTT_PORT
+sed -i "/\[Tx1\]/,/^\[/ s|^PTT_PORT=.*|PTT_PORT=$PTT_DEVICE|" "$CONFIG_FILE"
 
 # Verify updates
-if grep -q "AUDIO_DEV=alsa:plughw:$PLAYBACK_CARD" "$CONFIG_FILE" &&
-   grep -q "CAPTURE_DEV=alsa:plughw:$CAPTURE_CARD" "$CONFIG_FILE" &&
-   grep -q "PTT_PORT=$PTT_DEVICE" "$CONFIG_FILE"; then
+if grep -A3 "^\[Rx1\]" "$CONFIG_FILE" | grep -q "AUDIO_DEV=alsa:plughw:$CAPTURE_CARD" &&
+   grep -A5 "^\[Tx1\]" "$CONFIG_FILE" | grep -q "AUDIO_DEV=alsa:plughw:$PLAYBACK_CARD" &&
+   grep -A10 "^\[Tx1\]" "$CONFIG_FILE" | grep -q "PTT_PORT=$PTT_DEVICE"; then
     echo -e "\e[1;32m✅ Configuration updated successfully:\e[0m"
-    echo -e "\e[1;32m  AUDIO_DEV=alsa:plughw:$PLAYBACK_CARD\e[0m"
-    echo -e "\e[1;32m  CAPTURE_DEV=alsa:plughw:$CAPTURE_CARD\e[0m"
-    echo -e "\e[1;32m  PTT_PORT=$PTT_DEVICE\e[0m\n"
+    echo -e "\e[1;32m  [Rx1] AUDIO_DEV=alsa:plughw:$CAPTURE_CARD\e[0m"
+    echo -e "\e[1;32m  [Tx1] AUDIO_DEV=alsa:plughw:$PLAYBACK_CARD\e[0m"
+    echo -e "\e[1;32m  [Tx1] PTT_PORT=$PTT_DEVICE\e[0m\n"
 else
     echo -e "\e[1;31m❌ Failed to update $CONFIG_FILE! Please check manually.\e[0m"
     exit 1
