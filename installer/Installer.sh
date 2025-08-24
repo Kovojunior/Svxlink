@@ -1,9 +1,25 @@
 #!/bin/bash
+# Forced view of a licence file
+check_license() {
+    LICENCE_URL="https://raw.githubusercontent.com/Kovojunior/Svxlink/main/LICENCE.txt"
+    LICENCE_FILE="/tmp/Svxlink_LICENCE.txt"
 
-# Funkcija za namestitev Svxlink
+    echo -e "\e[1;34m=== Downloading licence file ===\e[0m"
+    curl -fsSL "$LICENCE_URL" -o "$LICENCE_FILE"
+
+    whiptail --title "Licence" --textbox "$LICENCE_FILE" 25 80
+
+    whiptail --title "Licence" --yesno "Choose yes if you agree with the licence file" 10 60
+    if [ $? -ne 0 ]; then
+        echo -e "\e[1;31mUser has not accepted the licence file, installer stopped\e[0m"
+        exit 1
+    fi
+}
+
+# Installs svxlink
 install_svxlink() {
     echo ""
-    echo -e "\e[1;34m=== Posodabljam repozitorije in nameščam potrebne knjižnice ===\e[0m"
+    echo -e "\e[1;34m=== Updating repositories and configuring necessary libraries ===\e[0m"
 
     apt update && apt upgrade -y
 
@@ -14,12 +30,12 @@ install_svxlink() {
         libssl-dev ladspa-sdk
 
     echo ""
-    echo -e "\e[1;34m=== Dodajam uporabnika svxlink ===\e[0m"
+    echo -e "\e[1;34m=== Adding user svxlink ===\e[0m"
     id -u svxlink &>/dev/null || useradd -rG audio,plugdev,dialout svxlink
     groups svxlink
 
     echo ""
-    echo -e "\e[1;34m=== Kloniram repozitorij Svxlink ===\e[0m"
+    echo -e "\e[1;34m=== Cloning Svxlink repository ===\e[0m"
     cd /usr/src || exit 1
     if [ ! -d "svxlink" ]; then
         git clone http://github.com/sm0svx/svxlink.git
@@ -29,7 +45,7 @@ install_svxlink() {
     git checkout 25.05.1
 
     echo ""
-    echo -e "\e[1;34m=== Gradim paket ===\e[0m"
+    echo -e "\e[1;34m=== Building package ===\e[0m"
     mkdir -p src/build
     cd src/build || exit 1
     cmake -DUSE_QT=OFF -DCMAKE_INSTALL_PREFIX=/usr \
@@ -38,11 +54,11 @@ install_svxlink() {
     make -j"$(nproc)" all doc package
 
     echo ""
-    echo -e "\e[1;34m=== Nameščam paket ===\e[0m"
+    echo -e "\e[1;34m=== Installing package ===\e[0m"
     dpkg -i svxlink-25.05.1-Linux.deb
 
     echo ""
-    echo -e "\e[1;34m=== Nalagam zvoke ===\e[0m"
+    echo -e "\e[1;34m=== Installing sounds ===\e[0m"
     cd /usr/share/svxlink/sounds/ || exit 1
     curl -LO https://github.com/sm0svx/svxlink-sounds-en_US-heather/releases/download/24.02/svxlink-sounds-en_US-heather-16k-24.02.tar.bz2
     echo ""
@@ -51,12 +67,12 @@ install_svxlink() {
 }
 
 update_svxlink() {
-    MODE=$1   # full_install ali update_svxlink
+    MODE=$1   # full_install or update_svxlink
 
-    # Mapo za varnostne kopije ustvarimo, če ne obstaja
+    # Creates backup dir
     BACKUP_DIR="/etc/svxlink_backups"
 
-    # Datoteke za morebitno varnostno kopiranje
+    # Backup these files
     declare -A FILES_TO_BACKUP=(
         ["Frn.tcl"]="/usr/share/svxlink/events.d/Frn.tcl"
         ["Logic.tcl"]="/usr/share/svxlink/events.d/Logic.tcl"
@@ -70,58 +86,55 @@ update_svxlink() {
     echo ""
     echo -e "\e[1;34m🔧 Začenja se posodobitev Svxlink konfiguracijskih datotek na standard PMR.SI\e[0m" 
 
-    # Odločitve glede varnostnega kopiranja
+    # Backup select (y/n)
     if [ "$MODE" == "full_install" ]; then
         BACKUP_CHOICE="n"
     else
-        read -p $'\e[1;33m⚠️ Želite izvesti varnostno kopiranje konfiguracijskih datotek pred posodobitvijo? (y/n): \e[0m' BACKUP_CHOICE
+        read -p $'\e[1;33m⚠️ Do you want to create backup files before updating? (y/n): \e[0m' BACKUP_CHOICE
     fi
 
     if [ "$BACKUP_CHOICE" == "y" ]; then
-        echo -e "\e[1;34m📦 Ustvarjam varnostne kopije...\e[0m"
+        echo -e "\e[1;34m📦 Creating backup files...\e[0m"
         mkdir -p "$BACKUP_DIR"
         for FILE in "${!FILES_TO_BACKUP[@]}"; do
             if [ -f "${FILES_TO_BACKUP[$FILE]}" ]; then
                 cp -v "${FILES_TO_BACKUP[$FILE]}" "$BACKUP_DIR/$FILE"
             fi
         done
-        echo -e $'\e[1;32m✅ Varnostne kopije so narejene v '"$BACKUP_DIR"$'\e[0m'
+        echo -e $'\e[1;32m✅ Backup files created in: '"$BACKUP_DIR"$'\e[0m'
     fi
 
     TMP_SCRIPT="/tmp/svxlink_install/update_svxlink.sh"
     URL="https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/update_svxlink.sh"
 
     echo ""
-    echo -e "\e[1;34m=== Nalagam PMR.SI datoteke ===\e[0m"
+    echo -e "\e[1;34m=== Installing PMR.SI files ===\e[0m"
 
-    # Prenos skripte v /tmp
     wget -q -O "$TMP_SCRIPT" "$URL"
     if [ $? -ne 0 ]; then
-    echo -e "\e[1;37;41m❌ Napaka pri prenosu skripte\e[0m\n"
+    echo -e "\e[1;37;41m❌ Error while downloading script\e[0m\n"
         return 1
     fi
 
-    # Nastavimo dovoljenja za izvajanje
     chmod +x "$TMP_SCRIPT"
 
-    # Izvedemo skripto
     bash "$TMP_SCRIPT"
 
-    # Po izvedbi
-    echo -e $'\e[1;32m✅ Posodobitev Svxlink zaključena!\e[0m\n'
+    echo -e $'\e[1;32m✅ Svxlink update successfully completed!\e[0m\n'
 }
 
-# Funkcija za odstranitev Svxlink
+# Makes full uninstall
 remove_svxlink() {
-    read -p $'\e[1;33m⚠️ Nahajate se v nevarnih vodah. Skripta bo pobrisala vse podatke, odstranila program Svxlink, konfiguratorje in vse knjižnice, ki so z njim povezane (razen WireGuard). Ste prepričani? Pritisnite Enter za nadaljevanje ali CTRL+C za prekinitev...\e[0m' 
+    read -p $'\e[1;33m⚠️ You are entering dangerous waters. This script will delete all data, remove the Svxlink program, its configurators, and all related libraries (except WireGuard). Are you sure? Press Enter to continue or CTRL+C to abort...\e[0m'
 
     echo ""
-    echo -e "\e[1;34m=== Ustavljam storitev Svxlink in HealthCheck ===\e[0m"
+    echo -e "\e[1;34m=== Stopping Svxlink and healthcheck script(s) ===\e[0m"
     systemctl stop svxlink 2>/dev/null
     systemctl stop svxlink_healthcheck.service 2>/dev/null
+    systemctl stop svxlink_healthcheck_python.service 2>/dev/null
 
     echo ""
-    echo -e "\e[1;34m=== Odstranjujem paket in knjižnice povezane s Svxlink ===\e[0m"
+    echo -e "\e[1;34m=== Removing svxlink packages and libraries ===\e[0m"
     apt purge -y svxlink* g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
         tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev \
         librtlsdr-dev doxygen groff alsa-utils vorbis-tools curl \
@@ -130,29 +143,114 @@ remove_svxlink() {
     apt autoremove -y
 
     echo ""
-    echo -e "\e[1;34m=== Brisem uporabnika svxlink ===\e[0m"
+    echo -e "\e[1;34m=== Removing user svxlink ===\e[0m"
     deluser --remove-home svxlink 2>/dev/null
 
     echo ""
-    echo -e "\e[1;34m=== Brisem HealthCheck storitev ===\e[0m"
+    echo -e "\e[1;34m=== Removing healthcheck script(s) ===\e[0m"
     systemctl disable svxlink_healthcheck.service 2>/dev/null
+    systemctl disable svxlink_healthcheck_python.service 2>/dev/null
     rm -f /etc/systemd/system/svxlink_healthcheck.service
+    rm -f /etc/systemd/system/svxlink_healthcheck_python.service
     rm -f /usr/local/bin/svxlink_healthcheck.sh
+    rm -f /usr/local/bin/svxlink_healthcheck.py
     systemctl daemon-reload
 
     echo ""
-    echo -e "\e[1;34m=== Brisem mape Svxlink ===\e[0m"
+    echo -e "\e[1;34m=== Removing pip watchdog ===\e[0m"
+    sudo pip3 uninstall -y watchdog --break-system-packages 2>/dev/null || true
+
+    echo ""
+    echo -e "\e[1;34m=== Removing svxlink directories ===\e[0m"
     rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink /tmp/svxlink_install/AIOC_settings.bash /tmp/svxlink_install/FRN_settings.bash
 
     echo ""
-    echo -e $'\e[1;32m✅ Svxlink, konfiguracije in HealthCheck so odstranjeni!\e[0m\n'
+    echo -e $'\e[1;32m✅ Svxlink, configuration files and healthcheck successfully removed!\e[0m\n'
 }
 
-
-# Funkcija za healthcheck
+# Installs python healthcheck script
 install_healthcheck() {
     echo ""
-    echo -e "\e[1;34m=== Nameščam healthcheck skripto ===\e[0m"
+    echo -e "\e[1;34m=== Installing Python healthcheck script ===\e[0m"
+
+    echo -e "\e[1;33mForcing python and pip install...\e[0m"
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends python3 python3-pip || true
+
+    echo -e "\e[1;33mInstalling watchdog with --break-system-packages...\e[0m"
+    sudo pip3 install --upgrade pip --break-system-packages
+    sudo pip3 install watchdog --break-system-packages
+
+    if [ -f /lib/systemd/system/svxlink.service ]; then
+        echo -e "\e[1;33mChanging svxlink.service: Restart=no...\e[0m"
+        sudo sed -i 's/^Restart=.*/Restart=no/' /lib/systemd/system/svxlink.service
+        sudo systemctl daemon-reload
+    else
+        echo -e "\e[1;33mWarning: /lib/systemd/system/svxlink.service does not exist!\e[0m"
+    fi
+
+    echo -e "\e[1;33mDownloading healthcheck.py...\e[0m"
+    if ! sudo curl -fsSL https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/healthcheck.py -o /usr/local/bin/svxlink_healthcheck.py; then
+        echo -e "\e[1;31m❌ Error: Could not download healthcheck.py from GitHub!\e[0m"
+        echo -e "\e[1;31mInstallation aborted. Please check your internet connection or GitHub availability.\e[0m"
+        return 1
+    fi
+    sudo chmod +x /usr/local/bin/svxlink_healthcheck.py
+
+    echo ""
+    echo -e "\e[1;34m--- Configure Email Settings for Healthcheck ---\e[0m"
+    read -rp "Enter sender email (Gmail): " sender
+    read -rsp "Enter sender app password: " password
+    echo ""
+    read -rp "Enter recipient email: " recipient
+
+    sudo sed -i "s|SENDER = .*|SENDER = \"${sender}\"|" /usr/local/bin/svxlink_healthcheck.py
+    sudo sed -i "s|PASSWORD = .*|PASSWORD = \"${password}\"|" /usr/local/bin/svxlink_healthcheck.py
+    sudo sed -i "s|RECIPIENT = .*|RECIPIENT = \"${recipient}\"|" /usr/local/bin/svxlink_healthcheck.py
+
+    if grep -q "SENDER = \"${sender}\"" /usr/local/bin/svxlink_healthcheck.py &&
+    grep -q "PASSWORD = \"${password}\"" /usr/local/bin/svxlink_healthcheck.py &&
+    grep -q "RECIPIENT = \"${recipient}\"" /usr/local/bin/svxlink_healthcheck.py; then
+        echo -e "\e[1;32m✅ Email settings successfully updated in healthcheck.py\e[0m"
+    else
+        echo -e "\e[1;31m❌ Failed to update email settings in healthcheck.py! Please check manually.\e[0m"
+        return 1
+    fi
+
+    echo -e "\e[1;33mBuilding systemd service svxlink_healthcheck_python...\e[0m"
+    cat <<'EOF' | sudo tee /etc/systemd/system/svxlink_healthcheck_python.service
+[Unit]
+Description=Python Healthcheck for svxlink service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/svxlink_healthcheck.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable svxlink_healthcheck_python.service
+    sudo systemctl start svxlink_healthcheck_python.service
+    sleep 1
+
+    echo ""
+    echo -e "\e[1;34mStatus svxlink_healthcheck_python after install:\e[0m"
+    systemctl status svxlink_healthcheck_python.service --no-pager --lines=0
+    journalctl -u svxlink_healthcheck_python.service -n 5 --no-pager
+
+    sleep 3
+    echo ""
+    echo -e $'\e[1;32m✅ Python Healthcheck installed and ran!\e[0m\n'
+}
+
+# Installs Healthcheck
+install_healthcheck_bash() {
+    echo ""
+    echo -e "\e[1;34m=== Installing healthcheck script ===\e[0m"
 
     cat <<'EOF' > /usr/local/bin/svxlink_healthcheck.sh
 #!/bin/bash
@@ -164,18 +262,18 @@ RESTART_COUNT=0
 while true; do
     STATUS=$(systemctl is-active $SERVICE)
     if [ "$STATUS" != "active" ]; then
-        echo "$(date): Storitev ni aktivna. Poskus ponovnega zagona..." >> /var/log/svxlink_healthcheck.log
+        echo "$(date): Service not active. Trying to restart..." >> /var/log/svxlink_healthcheck.log
         systemctl restart $SERVICE
         sleep 10
         STATUS=$(systemctl is-active $SERVICE)
         if [ "$STATUS" != "active" ]; then
             ((RESTART_COUNT++))
-            echo "$(date): Ponovni zagon ni uspel. Poskus št. $RESTART_COUNT" >> /var/log/svxlink_healthcheck.log
+            echo "$(date): Restart failed. Try num. $RESTART_COUNT" >> /var/log/svxlink_healthcheck.log
         else
             RESTART_COUNT=0
         fi
         if [ $RESTART_COUNT -ge $MAX_RESTARTS ]; then
-            echo "$(date): Maksimalno število poskusov doseženo. Prekinjam." >> /var/log/svxlink_healthcheck.log
+            echo "$(date): Maximum number of failed restarts reached. Stopping..." >> /var/log/svxlink_healthcheck.log
             exit 1
         fi
     else
@@ -189,7 +287,7 @@ EOF
 
     cat <<'EOF' > /etc/systemd/system/svxlink_healthcheck.service
 [Unit]
-Description=Healthcheck za storitev svxlink
+Description=Bash healthcheck for svxlink
 After=network.target
 
 [Service]
@@ -207,98 +305,99 @@ EOF
     sleep 1 
 
     echo ""
-    echo -e "\e[1;34mStanje Svxlink_healthCheck skripte po namestitvi:\e[0m"
+    echo -e "\e[1;34mStatus svxlink_healthcheck_python after install:\e[0m"
     systemctl status svxlink_healthcheck.service --no-pager --lines=0
     journalctl -u svxlink_healthcheck.service -n 5 --no-pager
 
     sleep 3
     echo ""
-    echo -e $'\e[1;32m✅ Healthcheck nameščen in zagnan!\e[0m\n'
+    echo -e $'\e[1;32m✅ Healthcheck installed and run!\e[0m\n'
 }
 
-# AIOC konfiguracija (neinteraktivna)
+# Installs AIOC configurator
 install_aioc_settings() {
     echo ""
-    echo -e "\e[1;34m🔧 Začenjam AIOC konfiguracijo...\e[0m"
+    echo -e "\e[1;34m🔧 Starting AIOC reconfiguration...\e[0m"
     wget -O /tmp/svxlink_install/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
     chmod +x /tmp/svxlink_install/AIOC_settings.bash
     bash /tmp/svxlink_install/AIOC_settings.bash
     status=$?
     if [ $status -eq 0 ]; then
-        echo -e "\e[1;32m✅ AIOC konfiguracija uspešno izvedena.\e[0m"
+        echo -e "\e[1;32m✅ AIOC reconfiguration successful.\e[0m"
     else
-        echo -e "\e[1;37;41m❌ Pri AIOC konfiguraciji je prišlo do napake (status=$status).\e[0m"
+        echo -e "\e[1;37;41m❌ AIOC reconfiguration failed (status=$status).\e[0m"
     fi
 }
 
-# FRN konfiguracija (interaktivna)
+# Installs FRN configurator
 install_frn_settings() {
     echo ""
-    echo -e "\e[1;34m🔧 Začenjam FRN konfiguracijo (interaktivno)...\e[0m"
+    echo -e "\e[1;34m🔧 Starting FRN reconfigurator...\e[0m"
     wget -O /tmp/svxlink_install/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
     chmod +x /tmp/svxlink_install/FRN_settings.bash
     bash /tmp/svxlink_install/FRN_settings.bash
 }
 
-# Wireguard namestitev brez konfiguracije
+# Installs wireguard
 install_wireguard() {
-    echo -e "\e[1;34m🔧 Začenjam wireguard namestitev...\e[0m"
+    echo -e "\e[1;34m🔧 Starting wireguard install...\e[0m"
     apt install wireguard
     echo ""
-    echo -e "⚠️ Konfiguracijskih datotek zaradi varnostne grožnje ni mogoče naložiti na splet. Za nastavitev piši na info@pmr446.si\n"
+    echo -e "⚠️ Configuration files cannot be uploaded online due to security reasons. For setup, please contact info@pmr446.si\n"
 }
 
-# Namesti vse
+# Full install
 full_install() {
-    read -p $'\e[1;33m🚀 Začenjam popolno namestitev Svxlink programa na PMR.SI standard. Pritisnite Enter za nadaljevanje ali CTRL+C za prekinitev...\e[0m'
+    read -p $'\e[1;33m🚀 Starting full install of Svxlink environment on PMR.SI standard. Press Enter to continue or CTRL+C to cancel...\e[0m'
 
     install_svxlink
     update_svxlink "full_install"
 
     echo ""
-    read -p $'\e[1;33m⚠️ Pred nadaljevanjem avtomatske AIOC konfiguracije se prepričajte, da je AIOC naprava priključena v USB vhod računalnika in svetijo zelene lučke. Pritisnite Enter za nadaljevanje...\e[0m'    
+    read -p $'\e[1;33m⚠️ Before proceeding with the automatic AIOC configuration, make sure the AIOC device is connected to the computer\'s USB port and the green LEDs are lit. Press Enter to continue...\e[0m'    
     install_aioc_settings
     
     install_frn_settings
     install_healthcheck
 
-    echo -e "\e[1;34mStatus HealthCheck skripte: \e[0m"
+    echo -e "\e[1;34mStatus of HealthCheck script: \e[0m"
     systemctl status svxlink_healthcheck.service --no-pager --lines=0
     journalctl -u svxlink_healthcheck.service -n 8 --no-pager
     echo ""
 
-    echo -e "\e[1;34mStatus Svxlink programa:\e[0m"
+    echo -e "\e[1;34mStatus of Svxlink program:\e[0m"
     systemctl status svxlink --no-pager --lines=0
-    echo -e "\n\e[1;34mZadnjih 5 vrstic dnevnika:\e[0m"
+    echo -e "\n\e[1;34mLast 5 lines of the log:\e[0m"
     journalctl -u svxlink -n 8 --no-pager
     echo ""
 
     install_wireguard
 
     echo ""
-    echo -e $'\e[1;32m✅ Popolna namestitev končana!\e[0m\n'
+    echo -e $'\e[1;32m✅ Full install completed successfully\e[0m\n'
 }
 
-# Glavni meni
-OPTION=$(whiptail --title "SVXLINK - PMR.SI Setup" --menu "Izberi možnost:" 15 70 4 \
-"1" "Namesti vse (2,3,4,5,6,7)" \
-"2" "Namesti Svxlink" \
-"3" "Posodobi Svxlink konfiguracijske datoteke" \
-"4" "Namesti HealthCheck za Svxlink" \
-"5" "Namesti AIOC konfigurator za Svxlink" \
-"6" "Namesti FRN konfigurator za Svxlink" \
-"7" "Namesti WireGuard" \
-"8" "Odstrani Svxlink, povezane programe in knjižnice" 3>&1 1>&2 2>&3)
+# Menu options
+OPTION=$(whiptail --title "SVXLINK - PMR.SI Setup" --menu "What would you like to do today?" 15 70 4 \
+"1" "Full install (2,3,4,5,6,7)" \
+"2" "Install Svxlink" \
+"3" "Update only Svxlink configuration files to PMR.SI standard" \
+"4" "Install Python HealthCheck for Svxlink" \
+"5" "Install AIOC konfigurator for Svxlink" \
+"6" "Install FRN konfigurator for Svxlink" \
+"7" "Install WireGuard" \
+"8" "Install Bash HealthCheck for Svxlink (depricated) " \
+"9" "Remove Svxlink, connected programs and libraries" 3>&1 1>&2 2>&3)
 
 case $OPTION in
-    1) full_install ;;
-    2) install_svxlink ;;
-    3) update_svxlink ;;
-    4) install_healthcheck ;;
-    5) install_aioc_settings ;;
-    6) install_frn_settings ;;
-    7) install_wireguard ;;
-    8) remove_svxlink ;;
-    *) echo "Preklicano." ;;
+    1) check_license; full_install ;;
+    2) check_license; install_svxlink ;;
+    3) check_license; update_svxlink ;;
+    4) check_license; install_healthcheck ;;
+    5) check_license; install_aioc_settings ;;
+    6) check_license; install_frn_settings ;;
+    7) check_license; install_wireguard ;;
+    8) check_license; install_healthcheck_bash ;;
+    9) check_license; remove_svxlink ;;
+    *) echo "Canceled." ;;
 esac
-

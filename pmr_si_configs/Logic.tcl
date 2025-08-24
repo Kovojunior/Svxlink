@@ -816,9 +816,9 @@ proc squelch_open {rx_id is_open} {
         set duration_ms [expr {$now - $squelch_open_time}]
         set duration_s [format "%.2f" [expr {$duration_ms / 1000.0}]]
         puts ">>>  RX timer: $duration_s s"
-        if {$duration_s > 181} {
-            puts ">>> WARNING: RX timer exceeded pmr.si limitations (180s)"
-        }
+        #if {$duration_s > 181} {
+            #puts ">>> WARNING: RX timer exceeded pmr.si limitations (180s)"
+        #}
     }
 }
 
@@ -843,9 +843,9 @@ proc transmit {is_on} {
         set duration_ms [expr {$now - $tx_on_time}]
         set duration_s [format "%.2f" [expr {$duration_ms / 1000.0}]]
         puts ">>>  TX timer: $duration_s s"
-        if {$duration_s > 181} {
-            puts ">>> WARNING: TX timer exceeded pmr.si limitations (180s)"
-        }
+        #if {$duration_s > 181} {
+            #puts ">>> WARNING: TX timer exceeded pmr.si limitations (180s)"
+        #}
     }
 }
 

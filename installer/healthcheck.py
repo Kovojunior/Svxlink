@@ -320,8 +320,8 @@ def get_sql_timeout():
                     TIMEOUT_RX = int(match.group(1)) + TOLERANCE
                     log_print(f"[SYSTEM] SQL_TIMEOUT set to {TIMEOUT_RX} (with tolerance).", GREEN)
                     return True
-        log_print("[WARNING] SQL_TIMEOUT not found in svxlink.conf.", YELLOW)
         TIMEOUT_RX = TIMEOUT_RX_DEFAULT
+        log_print(f"[WARNING] SQL_TIMEOUT not found in svxlink.conf. Using {TIMEOUT_RX} instead", YELLOW)
         return False
     except Exception as e:
         log_print(f"[ERROR] Could not read SQL_TIMEOUT: {e}", RED)
@@ -338,8 +338,8 @@ def get_timeout():
                     TIMEOUT_TX = int(match.group(1)) + TOLERANCE
                     log_print(f"[SYSTEM] TIMEOUT set to {TIMEOUT_TX} (with tolerance).", GREEN)
                     return True
-        log_print("[WARNING] TIMEOUT not found in svxlink.conf.", YELLOW)
         TIMEOUT_TX = TIMEOUT_TX_DEFAULT
+        log_print(f"[WARNING] TIMEOUT not found in svxlink.conf. Using {TIMEOUT_TX} instead", YELLOW)
         return False
     except Exception as e:
         log_print(f"[ERROR] Could not read TIMEOUT: {e}", RED)
