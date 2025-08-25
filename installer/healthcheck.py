@@ -287,10 +287,11 @@ class LogHandler(FileSystemEventHandler):
                     match = STOP_ERRORS.search(line)
                     if match:
                         error_str = match.group(0)
-                        log_print(f"[ALERT] Svxlink stop-level error detected: {error_str}. Stopping svxlink service...", RED)
+                        log_print(f"[ALERT] Svxlink stop-level error detected: {error_str}. Stopping svxlink service and this script...", RED)
                         keep_blocked = True
                         schedule_gmail(error_str)
                         stop_svxlink()
+                        sys.exit(1) 
 
                     with open(LOG_SVXLINK, "r", encoding="utf-8", errors="replace") as f:
                         f.seek(0, os.SEEK_END)
@@ -698,8 +699,8 @@ def check_freeze_rx():
         if squelch_open_time:
             elapsed = (datetime.now() - squelch_open_time).total_seconds()
             if elapsed >= TIMEOUT_RX and is_service_active("svxlink") and not is_restarting:
-                error_str = "[ALERT] svxlink may be frozen! (RX ON > {TIMEOUT_TX}s). Attempting a svxlink environment restart...({failed_resets})"
-                log_print(f"{error_str}", RED)
+                error_str = f"[ALERT] svxlink may be frozen! (RX ON > {TIMEOUT_TX}s). Attempting a svxlink environment restart...({failed_resets})"
+                log_print(error_str, RED)
                 schedule_gmail(error_str)
                 time.sleep(1)
                 reset_aioc_with_restart()
@@ -713,8 +714,8 @@ def check_freeze_tx():
         if tx_on_time:
             elapsed = (datetime.now() - tx_on_time).total_seconds()
             if elapsed >= TIMEOUT_TX and is_service_active("svxlink") and not is_restarting:
-                error_str = "[ALERT] svxlink may be frozen! (TX ON > {TIMEOUT_TX}s). Attempting a svxlink environment restart...({failed_resets})"
-                log_print(f"{error_str}", RED)
+                error_str = f"[ALERT] svxlink may be frozen! (TX ON > {TIMEOUT_TX}s). Attempting a svxlink environment restart...({failed_resets})"
+                log_print(error_str, RED)
                 schedule_gmail(error_str)
                 time.sleep(1)
                 reset_aioc_with_restart()
@@ -725,8 +726,8 @@ def check_freeze_tx():
 def check_wds_timeout():
     global wds_timer, WDS_TIMEOUT, failed_resets
     with lock:
-        error_str = "[ALERT] svxlink may be frozen! (No WDS signal for {WDS_TIMEOUT}s). Restarting svxlink service...({failed_resets})"
-        log_print(f"{error_str}", RED)
+        error_str = f"[ALERT] svxlink may be frozen! (No WDS signal for {WDS_TIMEOUT}s). Restarting svxlink service...({failed_resets})"
+        log_print(error_str, RED)
         schedule_gmail(error_str)
         restart_service("svxlink")
         WDS_TIMEOUT = min(WDS_TIMEOUT * 1.2, WDS_TIMEOUT_MAX)

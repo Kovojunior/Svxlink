@@ -161,8 +161,8 @@ remove_svxlink() {
     sudo pip3 uninstall -y watchdog --break-system-packages 2>/dev/null || true
 
     echo ""
-    echo -e "\e[1;34m=== Removing svxlink directories ===\e[0m"
-    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /usr/src/svxlink /tmp/svxlink_install/AIOC_settings.bash /tmp/svxlink_install/FRN_settings.bash
+    echo -e "\e[1;34m=== Removing svxlink directories and script files ===\e[0m"
+    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /var/log/svxlink_healthcheck /var/log/svxlink_python /usr/src/svxlink /tmp/svxlink_install/AIOC_settings.sh /tmp/svxlink_install/FRN_settings.sh /tmp/svxlink_install/update_svxlink.sh /tmp/svxlink_install/healthcheck.py
 
     echo ""
     echo -e $'\e[1;32m✅ Svxlink, configuration files and healthcheck successfully removed!\e[0m\n'
@@ -238,7 +238,7 @@ EOF
     sleep 1
 
     echo ""
-    echo -e "\e[1;34mStatus svxlink_healthcheck_python after install:\e[0m"
+    echo -e "\e[1;34mStatus of Python script after install:\e[0m"
     systemctl status svxlink_healthcheck_python.service --no-pager --lines=0
     journalctl -u svxlink_healthcheck_python.service -n 5 --no-pager
 
@@ -250,7 +250,7 @@ EOF
 # Installs Healthcheck
 install_healthcheck_bash() {
     echo ""
-    echo -e "\e[1;34m=== Installing healthcheck script ===\e[0m"
+    echo -e "\e[1;34m=== Installing bash healthcheck script ===\e[0m"
 
     cat <<'EOF' > /usr/local/bin/svxlink_healthcheck.sh
 #!/bin/bash
@@ -305,7 +305,7 @@ EOF
     sleep 1 
 
     echo ""
-    echo -e "\e[1;34mStatus svxlink_healthcheck_python after install:\e[0m"
+    echo -e "\e[1;34mStatus of bash healthcheck script after install:\e[0m"
     systemctl status svxlink_healthcheck.service --no-pager --lines=0
     journalctl -u svxlink_healthcheck.service -n 5 --no-pager
 
@@ -318,9 +318,9 @@ EOF
 install_aioc_settings() {
     echo ""
     echo -e "\e[1;34m🔧 Starting AIOC reconfiguration...\e[0m"
-    wget -O /tmp/svxlink_install/AIOC_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
-    chmod +x /tmp/svxlink_install/AIOC_settings.bash
-    bash /tmp/svxlink_install/AIOC_settings.bash
+    wget -O /tmp/svxlink_install/AIOC_settings.sh https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh
+    chmod +x /tmp/svxlink_install/AIOC_settings.sh
+    bash /tmp/svxlink_install/AIOC_settings.sh
     status=$?
     if [ $status -eq 0 ]; then
         echo -e "\e[1;32m✅ AIOC reconfiguration successful.\e[0m"
@@ -333,9 +333,9 @@ install_aioc_settings() {
 install_frn_settings() {
     echo ""
     echo -e "\e[1;34m🔧 Starting FRN reconfigurator...\e[0m"
-    wget -O /tmp/svxlink_install/FRN_settings.bash https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
-    chmod +x /tmp/svxlink_install/FRN_settings.bash
-    bash /tmp/svxlink_install/FRN_settings.bash
+    wget -O /tmp/svxlink_install/FRN_settings.sh https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/FRN_settings.sh
+    chmod +x /tmp/svxlink_install/FRN_settings.sh
+    bash /tmp/svxlink_install/FRN_settings.sh
 }
 
 # Installs wireguard
@@ -378,7 +378,7 @@ full_install() {
 }
 
 # Menu options
-OPTION=$(whiptail --title "SVXLINK - PMR.SI Setup" --menu "What would you like to do today?" 15 70 4 \
+OPTION=$(whiptail --title "SVXLINK - PMR.SI Setup" --menu "What would you like to do today?" 18 70 8 \
 "1" "Full install (2,3,4,5,6,7)" \
 "2" "Install Svxlink" \
 "3" "Update only Svxlink configuration files to PMR.SI standard" \
