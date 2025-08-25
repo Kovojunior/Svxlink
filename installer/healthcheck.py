@@ -110,6 +110,7 @@ lock = threading.Lock()
 # Sends an Email
 def send_pending_errors():
     global pending_errors, last_email_time, current_retry_interval
+
     if not pending_errors:
         return True
 
@@ -291,6 +292,7 @@ class LogHandler(FileSystemEventHandler):
                         keep_blocked = True
                         schedule_gmail(error_str)
                         stop_svxlink()
+                        send_pending_errors()
                         sys.exit(1) 
 
                     with open(LOG_SVXLINK, "r", encoding="utf-8", errors="replace") as f:

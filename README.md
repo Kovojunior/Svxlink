@@ -176,7 +176,7 @@ The script will prompt for licence acceptance and guide you through installation
         If errors occur during compilation or installation, the user may need to resolve missing dependencies or permission issues manually.
     <br></br>
 
-3. `Svxlink updater`, updates environment files. Look below.
+3. `Svxlink updater`, updates environment files. See chapter **III (3)**.
    <br></br>
 
 4. `Python healthcheck installer`, installs only the latest version of Python healthcheck script. 
@@ -253,10 +253,10 @@ The script will prompt for licence acceptance and guide you through installation
     <br></br>
 
 
-5. `AIOC configurator`, installs only an AIOC configurator. Look below.
+5. `AIOC configurator`, installs only an AIOC configurator. See chapter **IV (4)**.
     <br></br>
 
-6. `FRN settings configurator`, Look below.
+6. `FRN settings configurator`, see chapter **II (2)**
     <br></br>
 
 7. `WireGuard installer`, installs the WireGuard VPN package required for secure connections.  
