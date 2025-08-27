@@ -109,7 +109,7 @@ lock = threading.Lock()
 # --- EMail functions --- #
 # Sends an Email
 def send_pending_errors():
-    global pending_errors, last_email_time, current_retry_interval
+    global pending_errors, last_email_time, current_retry_interval, SENDER, PASSWORD, RECIPIENT, LOG_SVXLINK, OUTPUT_LOG_FILE
 
     if not pending_errors:
         return True
@@ -127,11 +127,11 @@ For diagnostic purposes, the following log excerpts are included:
 1) pending errors:
 """ + "\n".join(pending_errors) + """
 
-2) last 100 lines of Python HealthCheck script:
-""" + "\n".join(tail_file_since_last_email(OUTPUT_LOG_FILE, 100)) + """
+2) last 200 lines of Python HealthCheck script:
+""" + "\n".join(tail_file_since_last_email(OUTPUT_LOG_FILE, 200)) + """
 
-3) last 100 lines of Svxlink log:
-""" + "\n".join(tail_file_since_last_email(LOG_SVXLINK, 100)) + """
+3) last 300 lines of Svxlink log:
+""" + "\n".join(tail_file_since_last_email(LOG_SVXLINK, 300)) + """
 --------------------------------------------------------------------------------
 This message has been generated automatically. 
 Please review the errors above and take appropriate corrective actions.
@@ -161,7 +161,7 @@ Please review the errors above and take appropriate corrective actions.
 
 # Schedules a new email
 def schedule_gmail(error_str):
-    global pending_errors, last_email_time, first_email
+    global pending_errors, last_email_time, first_email, SKIP_ERRORS, EMAIL_THROTTLE
 
     if SKIP_ERRORS.search(error_str):
         log_print(f"[INFO] Ignored error for email scheduling: {error_str}", BLUE)
@@ -184,7 +184,7 @@ def schedule_gmail(error_str):
 
 # Periodically tries to send an email in case of internet connection loss
 def periodic_email_sender():
-    global current_retry_interval, last_email_time
+    global current_retry_interval, last_email_time, pending_errors, EMAIL_RETRY_INTERVAL, MAX_EMAIL_RETRY_INTERVAL, EMAIL_THROTTLE
 
     while True:
         now = datetime.now()
@@ -210,7 +210,7 @@ class LogHandler(FileSystemEventHandler):
             self.position = f.tell()
 
     def on_modified(self, event):
-        global squelch_open_time, squelch_timer, tx_on_time, tx_timer, wds_timer, keep_blocked, failed_resets, TIMEOUT_RX, TIMEOUT_TX, MAX_FAILED_RESETS
+        global squelch_open_time, squelch_timer, tx_on_time, tx_timer, wds_timer, keep_blocked, failed_resets, TIMEOUT_RX, TIMEOUT_TX, MAX_FAILED_RESETS, LOG_SVXLINK, IGNORE_REGEX, WDS_TIMEOUT, WDS_TIMEOUT_INIT, RESTART_ERRORS, STOP_ERRORS, SKIP_ERRORS
 
         if event.src_path != LOG_SVXLINK:
             return
@@ -314,7 +314,7 @@ class LogHandler(FileSystemEventHandler):
 # --- Mischelaneous --- #
 # Gets SQL_TIMEOUT from /etc/svxlink/svxlink.conf
 def get_sql_timeout():
-    global TIMEOUT_RX, TIMEOUT_RX_DEFAULT, TOLERANCE
+    global TIMEOUT_RX, TIMEOUT_RX_DEFAULT, TOLERANCE, SVXLINK_CONFIG
     try:
         with open(SVXLINK_CONFIG, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
@@ -332,7 +332,7 @@ def get_sql_timeout():
     
 # Gets TIMEOUT from /etc/svxlink/svxlink.conf
 def get_timeout():
-    global TIMEOUT_TX, TIMEOUT_TX_DEFAULT, TOLERANCE
+    global TIMEOUT_TX, TIMEOUT_TX_DEFAULT, TOLERANCE, SVXLINK_CONFIG
     try:
         with open(SVXLINK_CONFIG, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
@@ -350,7 +350,7 @@ def get_timeout():
     
 # Gets WDS_SIGNAL_INTERVAL from /etc/svxlink/svxlink.conf
 def get_wds_signal_interval():
-    global WDS_TIMEOUT_DEFAULT, TOLERANCE, WDS_TIMEOUT_INIT, WDS_TIMEOUT
+    global WDS_TIMEOUT_DEFAULT, TOLERANCE, WDS_TIMEOUT_INIT, WDS_TIMEOUT, SVXLINK_CONFIG
     try:
         with open(SVXLINK_CONFIG, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
@@ -370,6 +370,7 @@ def get_wds_signal_interval():
     
 # Get name of a gateway from config
 def gateway_name():
+    global CONFIG_FILE
     try:
         out = subprocess.check_output(
             f"grep CALLSIGN_AND_USER {CONFIG_FILE}", shell=True, text=True
@@ -383,6 +384,7 @@ def gateway_name():
 # --- Loggers --- #
 # Logs into terminal (with color) and output file
 def log_print(msg, color=RESET):
+    global OUTPUT_LOG_FILE
     timestamp = datetime.now().strftime("%a %b %d %H:%M:%S %Y")
     colored_msg = f"{color}[{timestamp}] {msg}{RESET}"
     print(colored_msg)
@@ -391,6 +393,7 @@ def log_print(msg, color=RESET):
 
 # Logs into terminal only
 def log(msg, color=RESET):
+    global LOG_FILE
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     line = f"{timestamp}: {msg}"
     print(f"{color}{line}{RESET}")
@@ -398,7 +401,7 @@ def log(msg, color=RESET):
         f.write(line + "\n")
 
 def backup_and_clear_log_and_reset_handler(old_handler=None):
-    global event_handler
+    global event_handler, LOG_SVXLINK, LOG_SVXLINK_BACKUP
     try:
         # Backup
         with open(LOG_SVXLINK, "r", encoding="utf-8", errors="replace") as original, open(LOG_SVXLINK_BACKUP, "a") as backup:
@@ -430,8 +433,8 @@ def tail_file(filename, n=10):
     
 from datetime import datetime
 
-# Tail lines after last_email_time (max 100)
-def tail_file_since_last_email(filename, max_lines=100):
+# Tail lines after last_email_time (max 300)
+def tail_file_since_last_email(filename, max_lines=300):
     global last_email_time
 
     try:
@@ -524,7 +527,7 @@ def reset_aioc_device(name=AIOC_NAME):
 # Downloads automatic AIOC configurator
 def download_aioc_script():
     try:
-        url = "https://raw.githubusercontent.com/Kovojunior/Svxlink/pmr.si/installer/AIOC_settings.sh"
+        url = "https://raw.githubusercontent.com/Kovojunior/Svxlink/main/installer/AIOC_settings.sh"
         urllib.request.urlretrieve(url, AIOC_LOCAL)
         os.chmod(AIOC_LOCAL, 0o755)
         log_print(f"[SYSTEM] AIOC_settings.sh script downloaded successfully.", GREEN)
@@ -628,7 +631,7 @@ def stop_svxlink():
 
 # Restarts a system service
 def restart_service(service):
-    global wds_timer, tx_timer, squelch_timer, failed_resets, RESET_TIMEOUT, WDS_TIMEOUT, MAX_FAILED_RESETS
+    global wds_timer, tx_timer, squelch_timer, failed_resets, RESET_TIMEOUT, WDS_TIMEOUT, MAX_FAILED_RESETS, WDS_TIMEOUT_MAX, WDS_TIMEOUT_INIT, keep_blocked
 
     try:
         if service == "svxlink" and failed_resets >= MAX_FAILED_RESETS:
@@ -701,7 +704,7 @@ def check_freeze_rx():
         if squelch_open_time:
             elapsed = (datetime.now() - squelch_open_time).total_seconds()
             if elapsed >= TIMEOUT_RX and is_service_active("svxlink") and not is_restarting:
-                error_str = f"[ALERT] svxlink may be frozen! (RX ON > {TIMEOUT_TX}s). Attempting a svxlink environment restart...({failed_resets})"
+                error_str = f"[ALERT] svxlink may be frozen! (RX ON > {TIMEOUT_RX}s). Attempting a svxlink environment restart...({failed_resets})"
                 log_print(error_str, RED)
                 schedule_gmail(error_str)
                 time.sleep(1)
@@ -726,7 +729,7 @@ def check_freeze_tx():
 
 # Checks for watchdog signal - restarts svxlink only
 def check_wds_timeout():
-    global wds_timer, WDS_TIMEOUT, failed_resets
+    global wds_timer, WDS_TIMEOUT, failed_resets, WDS_TIMEOUT_MAX
     with lock:
         error_str = f"[ALERT] svxlink may be frozen! (No WDS signal for {WDS_TIMEOUT}s). Restarting svxlink service...({failed_resets})"
         log_print(error_str, RED)
@@ -737,9 +740,10 @@ def check_wds_timeout():
 # --- End: HealthCheck functions --- #
 # --- End: Functions --- #
 
+# --- Test --- #
 def test():
     pass
-# --- End: Functions ---
+# --- End: Test --- #
 
 
 # --- Main function ---
