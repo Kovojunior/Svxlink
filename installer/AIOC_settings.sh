@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CONFIG_FILE="/etc/svxlink/svxlink.conf"
+BACKUP_DIR="/etc/svxlink_backups"
 
 # Find playback and capture cards
 PLAYBACK_CARD=$(aplay -l | grep -i "All-In-One-Cable" | awk -F'[: ]+' '{print $2}' | head -n1)
@@ -16,7 +17,7 @@ if [ -z "$PLAYBACK_CARD" ] || [ -z "$CAPTURE_CARD" ] || [ -z "$PTT_DEVICE" ]; th
 fi
 
 # Backup existing configuration
-cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
+cp "$CONFIG_FILE" "${BACKUP_DIR}/svxlink.conf.bak"
 
 # --- Update ONLY Rx1 and Tx1 sections ---
 # Update Rx1 -> CAPTURE_DEV

@@ -114,7 +114,7 @@ CITY_CITY_PART="$CITY, $CITY_PART"
 
 mkdir -p "$BACKUP_DIR"
 
-cp "$CONF_FILE" "${CONF_FILE}.bak"
+cp "$CONF_FILE" "${BACKUP_DIR}/ModuleFrn.conf.bak"
 cp /etc/svxlink/svxlink.conf "$BACKUP_DIR/svxlink.conf.bak"
 
 sed -i "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$EMAIL_ADDRESS/" "$CONF_FILE"

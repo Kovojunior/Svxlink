@@ -162,7 +162,7 @@ remove_svxlink() {
 
     echo ""
     echo -e "\e[1;34m=== Removing svxlink directories and script files ===\e[0m"
-    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /var/log/svxlink_healthcheck /var/log/svxlink_python /usr/src/svxlink /tmp/svxlink_install/AIOC_settings.sh /tmp/svxlink_install/FRN_settings.sh /tmp/svxlink_install/update_svxlink.sh /tmp/svxlink_install/healthcheck.py
+    rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /var/log/svxlink_healthcheck /etc/svxlink_backups /var/log/svxlink_python /usr/src/svxlink /tmp/svxlink_install/AIOC_settings.sh /tmp/svxlink_install/FRN_settings.sh /tmp/svxlink_install/update_svxlink.sh /tmp/svxlink_install/healthcheck.py
 
     echo ""
     echo -e $'\e[1;32m✅ Svxlink, configuration files and healthcheck successfully removed!\e[0m\n'
