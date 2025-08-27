@@ -7,9 +7,9 @@ check_license() {
     echo -e "\e[1;34m=== Downloading licence file ===\e[0m"
     curl -fsSL "$LICENCE_URL" -o "$LICENCE_FILE"
 
-    whiptail --title "Licence" --textbox "$LICENCE_FILE" 25 80
+    whiptail --title "Licence" --textbox "$LICENCE_FILE" 50 100
 
-    whiptail --title "Licence" --yesno "Choose yes if you agree with the licence file" 10 60
+    whiptail --title "Licence" --yesno "Choose yes if you agree with the licence file" 10 50
     if [ $? -ne 0 ]; then
         echo -e "\e[1;31mUser has not accepted the licence file, installer stopped\e[0m"
         exit 1
@@ -21,7 +21,7 @@ install_svxlink() {
     echo ""
     echo -e "\e[1;34m=== Updating repositories and configuring necessary libraries ===\e[0m"
 
-    apt update && apt upgrade -y
+    apt update && apt upgrade -y 
 
     apt install -y g++ cmake make libsigc++-2.0-dev libgsm1-dev libpopt-dev \
         tcl-dev libgcrypt20-dev libspeex-dev libasound2-dev libopus-dev \
@@ -84,7 +84,7 @@ update_svxlink() {
     )
 
     echo ""
-    echo -e "\e[1;34m🔧 Začenja se posodobitev Svxlink konfiguracijskih datotek na standard PMR.SI\e[0m" 
+    echo -e "\e[1;34m🔧 Svxlink update script starting...\e[0m" 
 
     # Backup select (y/n)
     if [ "$MODE" == "full_install" ]; then
@@ -173,13 +173,13 @@ install_healthcheck() {
     echo ""
     echo -e "\e[1;34m=== Installing Python healthcheck script ===\e[0m"
 
-    echo -e "\e[1;33mForcing python and pip install...\e[0m"
-    sudo apt-get update
-    sudo apt-get install -y --no-install-recommends python3 python3-pip || true
+    #echo -e "\e[1;33mForcing python and pip install...\e[0m"
+    #sudo apt-get update
+    #udo apt-get install -y --no-install-recommends python3 python3-pip || true
 
-    echo -e "\e[1;33mInstalling watchdog with --break-system-packages...\e[0m"
-    sudo pip3 install --upgrade pip --break-system-packages
-    sudo pip3 install watchdog --break-system-packages
+    #echo -e "\e[1;33mInstalling watchdog with --break-system-packages...\e[0m"
+    #sudo pip3 install --upgrade pip --break-system-packages # Fix it!
+    #sudo pip3 install watchdog --break-system-packages
 
     if [ -f /lib/systemd/system/svxlink.service ]; then
         echo -e "\e[1;33mChanging svxlink.service: Restart=no...\e[0m"
@@ -361,8 +361,8 @@ full_install() {
     install_healthcheck
 
     echo -e "\e[1;34mStatus of HealthCheck script: \e[0m"
-    systemctl status svxlink_healthcheck.service --no-pager --lines=0
-    journalctl -u svxlink_healthcheck.service -n 8 --no-pager
+    systemctl status svxlink_healthcheck_python.service --no-pager --lines=0
+    journalctl -u svxlink_healthcheck_python.service -n 8 --no-pager
     echo ""
 
     echo -e "\e[1;34mStatus of Svxlink program:\e[0m"

@@ -112,7 +112,7 @@ CITY_PART="${input:-$OLD_CITY_PART}"
 CITY_CITY_PART="$CITY, $CITY_PART"
 
 cp "$CONF_FILE" "${CONF_FILE}.bak"
-cp /etc/svxlink/svxlink.conf /etc/svxlink/svxlink.conf.bak
+cp /etc/svxlink/svxlink.conf /etc/svxlink/svxlink.conf.bak # to:do spremeni na /etc/svxlink_backups, ki ga dela že installer.sh
 
 sed -i "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$EMAIL_ADDRESS/" "$CONF_FILE"
 sed -i "s/^DYN_PASSWORD=.*/DYN_PASSWORD=$DYN_PASSWORD/" "$CONF_FILE"

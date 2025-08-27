@@ -8,6 +8,7 @@ Full license text:
 https://creativecommons.org/licenses/by-nc/4.0/legalcode
 
 
+
 Slovenia
 --------
 ⚠ SPECIAL RESTRICTION FOR SLOVENIA ⚠
@@ -16,8 +17,8 @@ Slovenia
 - CBRK OBALA community may ONLY use this code for the purpose of connecting nodes to the pmr.si server.  
 - Users in Slovenia who are not part of the CBRK OBALA community are NOT GRANTED ANY RIGHTS under this license.  
 - For RADIO AMATEUR USAGE in Slovenia, written permission is REQUIRED. Please contact: info@pmr446.si.
-
 No user in Slovenia, outside these exceptions, may use, copy, distribute, or modify these scripts or installers without explicit approval.
+
 
 
 Summary
