@@ -173,13 +173,7 @@ install_healthcheck() {
     echo ""
     echo -e "\e[1;34m=== Installing Python healthcheck script ===\e[0m"
 
-    #echo -e "\e[1;33mForcing python and pip install...\e[0m"
-    #sudo apt-get update
-    #udo apt-get install -y --no-install-recommends python3 python3-pip || true
-
-    #echo -e "\e[1;33mInstalling watchdog with --break-system-packages...\e[0m"
-    #sudo pip3 install --upgrade pip --break-system-packages # Fix it!
-    #sudo pip3 install watchdog --break-system-packages
+    sudo apt-get install -y python3-watchdog
 
     if [ -f /lib/systemd/system/svxlink.service ]; then
         echo -e "\e[1;33mChanging svxlink.service: Restart=no...\e[0m"
