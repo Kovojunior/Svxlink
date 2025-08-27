@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CONF_FILE="/etc/svxlink/svxlink.d/ModuleFrn.conf"
+BACKUP_DIR="/etc/svxlink_backups"
 
 echo -e "\e[1;34m📌 Svxlink configuration file: /etc/svxlink/svxlink.d/ModuleFrn.conf\e[0m"
 
@@ -111,8 +112,10 @@ read -p "CITY_PART [$OLD_CITY_PART]: " input
 CITY_PART="${input:-$OLD_CITY_PART}"
 CITY_CITY_PART="$CITY, $CITY_PART"
 
+mkdir -p "$BACKUP_DIR"
+
 cp "$CONF_FILE" "${CONF_FILE}.bak"
-cp /etc/svxlink/svxlink.conf /etc/svxlink/svxlink.conf.bak # to:do spremeni na /etc/svxlink_backups, ki ga dela že installer.sh
+cp /etc/svxlink/svxlink.conf "$BACKUP_DIR/svxlink.conf.bak"
 
 sed -i "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$EMAIL_ADDRESS/" "$CONF_FILE"
 sed -i "s/^DYN_PASSWORD=.*/DYN_PASSWORD=$DYN_PASSWORD/" "$CONF_FILE"
