@@ -34,9 +34,9 @@ EMAIL_RETRY_INTERVAL = 300 # 5 minutes
 MAX_EMAIL_RETRY_INTERVAL = 86400 # 1 day
 
 # ! Configure before using this script! Not included on github
-SENDER = "SENDER_EMAIL"
-PASSWORD = "SENDER_PASSWORD"
-RECIPIENT = "RECIPIENT_EMAIL"
+SENDER = ""
+PASSWORD = ""
+RECIPIENT = ""
 # !!!
 
 LOG_SVXLINK = "/var/log/svxlink"
@@ -756,7 +756,8 @@ def start_wds_timer():
     wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)
     wds_timer.daemon = True
     wds_timer.start()
-    log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
+    # debug
+    #log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
 # --- End: HealthCheck functions --- #
 # --- End: Functions --- #
 
