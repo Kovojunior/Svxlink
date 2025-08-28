@@ -266,12 +266,9 @@ class LogHandler(FileSystemEventHandler):
             # Executes forced svxlink restart due to missing watchdog (WDS) signal
             elif "SimplexLogic: WDS signal" in line and not keep_blocked and (failed_resets < MAX_FAILED_RESETS):
                 with lock:
-                    if wds_timer:
-                        wds_timer.cancel()
                     WDS_TIMEOUT = WDS_TIMEOUT_INIT
-                    wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)
-                    wds_timer.start()
-                    log_print("[INFO] WDS signal detected, watchdog timer reset.", GREEN)
+                    start_wds_timer()
+                    log_print("[INFO] WDS signal detected, watchdog timer reset.", BLUE)
 
             # Executes forced svxlink and AIOC restart due to critical error
             elif RESTART_ERRORS.search(line) and not is_restarting and (failed_resets < MAX_FAILED_RESETS):
@@ -614,8 +611,7 @@ def stop_svxlink():
         if is_service_active("svxlink"):
             subprocess.run(["sudo", "systemctl", "stop", "svxlink"], check=True)
             log_print("[SYSTEM] Svxlink stopped by force.", GREEN)
-            wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)
-            wds_timer.start()
+            start_wds_timer()
             log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
             return True
         else:
@@ -624,8 +620,7 @@ def stop_svxlink():
     except subprocess.CalledProcessError as e:
         log_print(f"[SYSTEM] Script encountered an error when stopping Svxlink by force: {e}", RED)
         log_print("[SYSTEM] Svxlink stopped by force.", GREEN)
-        wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)
-        wds_timer.start()
+        start_wds_timer()
         log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
         return False
 
@@ -662,8 +657,7 @@ def restart_service(service):
             if service == "svxlink":
                 failed_resets = 0
                 WDS_TIMEOUT = WDS_TIMEOUT_INIT
-                wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)
-                wds_timer.start()
+                start_wds_timer()
                 log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
             return True
         else:
@@ -672,8 +666,7 @@ def restart_service(service):
             if service == "svxlink":
                     failed_resets += 1
                     WDS_TIMEOUT = min(int(WDS_TIMEOUT * 1.2), WDS_TIMEOUT_MAX)
-                    wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)
-                    wds_timer.start()
+                    start_wds_timer()
                     log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s (backoff, failed resets: {failed_resets})", BLUE)
 
             return False
@@ -684,8 +677,7 @@ def restart_service(service):
         if service == "svxlink":
             failed_resets += 1
             WDS_TIMEOUT = min(int(WDS_TIMEOUT * 1.2), WDS_TIMEOUT_MAX)
-            wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)
-            wds_timer.start()
+            start_wds_timer()
             log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s (backoff, failed resets: {failed_resets})", BLUE)
             failed_resets += 1
         return False
@@ -737,6 +729,20 @@ def check_wds_timeout():
         restart_service("svxlink")
         WDS_TIMEOUT = min(WDS_TIMEOUT * 1.2, WDS_TIMEOUT_MAX)
         wds_timer = None
+
+# Starts WDS timer safely, without leaving some open
+def start_wds_timer():
+    global wds_timer, WDS_TIMEOUT
+    if wds_timer:
+        try:
+            wds_timer.cancel()
+            log_print("[INFO] Previous WDS timer cancelled before starting new.", BLUE)
+        except Exception as e:
+            log_print(f"[WARNING] Could not cancel previous WDS timer: {e}", YELLOW)
+    wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)
+    wds_timer.daemon = True
+    wds_timer.start()
+    log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
 # --- End: HealthCheck functions --- #
 # --- End: Functions --- #
 
