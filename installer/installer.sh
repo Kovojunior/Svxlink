@@ -337,7 +337,7 @@ install_wireguard() {
     echo -e "\e[1;34m🔧 Starting wireguard install...\e[0m"
     apt install wireguard
     echo ""
-    echo -e "\e[1;37;41m⚠️ Configuration files cannot be uploaded online due to security reasons. For setup, please contact info@pmr446.si\n\e[0m"
+    echo -e "\e[1;37;41m⚠️ Configuration files cannot be uploaded online due to security reasons. For setup, please contact info@pmr.si\n\e[0m"
 }
 
 # Full install

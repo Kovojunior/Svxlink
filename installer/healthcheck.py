@@ -4,6 +4,7 @@ import subprocess
 import smtplib
 import fcntl
 import os
+import signal
 import urllib.request
 import sys
 import threading
@@ -33,9 +34,9 @@ EMAIL_RETRY_INTERVAL = 300 # 5 minutes
 MAX_EMAIL_RETRY_INTERVAL = 86400 # 1 day
 
 # ! Configure before using this script! Not included on github
-SENDER = "NODE ADMINISTRATOR EMAIL"
-PASSWORD = "ADMINISTRATOR EMAIL APP PASSWORD: "
-RECIPIENT = "RECIPIENT EMAIL"
+SENDER = "SENDER_EMAIL"
+PASSWORD = "SENDER_PASSWORD"
+RECIPIENT = "RECIPIENT_EMAIL"
 # !!!
 
 LOG_SVXLINK = "/var/log/svxlink"
@@ -91,12 +92,14 @@ tx_on_time = None
 tx_timer = None
 wds_timer = None
 failed_resets = 0
-first_email = True
 
 # EMail settings
-last_email_time = datetime.now()
+last_email_time = None
 pending_errors = []
 current_retry_interval = EMAIL_RETRY_INTERVAL
+first_email = True
+last_email_success = True
+email_sending_lock = threading.Lock()  # global flag for sending
 
 # Booleans
 is_restarting = False # for checking if svxlink is restarting at the moment
@@ -109,96 +112,106 @@ lock = threading.Lock()
 # --- EMail functions --- #
 # Sends an Email
 def send_pending_errors():
-    global pending_errors, last_email_time, current_retry_interval, SENDER, PASSWORD, RECIPIENT, LOG_SVXLINK, OUTPUT_LOG_FILE
+    global pending_errors, last_email_time, current_retry_interval, last_email_success, email_sending_lock 
+    global SENDER, PASSWORD, RECIPIENT, LOG_SVXLINK, OUTPUT_LOG_FILE
 
-    if not pending_errors:
-        return True
+    with email_sending_lock:  # samo ena nit pošilja email hkrati
+        if not pending_errors:
+            return True
 
-    # --- Build message ---
-    subject = f"[{gateway_name()} Svxlink Alert]"
-    content = f"""{subject}
+        subject = f"[{gateway_name()} Svxlink Alert]"
+        content = f"""{subject}
 
-Dear Gateway Administrator,
-The Svxlink node has detected one or more critical issues during operation:
-""" + "\n".join(f"- {e}" for e in pending_errors) + """
+    Dear Gateway Administrator,
+    The Svxlink node has detected one or more critical issues during operation:
+    """ + "\n".join(f"- {e}" for e in pending_errors) + """
 
-For diagnostic purposes, the following log excerpts are included:
---------------------------------------------------------------------------------
-1) pending errors:
-""" + "\n".join(pending_errors) + """
+    For diagnostic purposes, the following log excerpts are included:
+    --------------------------------------------------------------------------------
+    1) pending errors:
+    """ + "\n".join(pending_errors) + """
 
-2) last 200 lines of Python HealthCheck script:
-""" + "\n".join(tail_file_since_last_email(OUTPUT_LOG_FILE, 200)) + """
+    2) last 200 lines of Python HealthCheck script:
+    """ + "\n".join(tail_file_since_last_email(OUTPUT_LOG_FILE, 200)) + """
 
-3) last 300 lines of Svxlink log:
-""" + "\n".join(tail_file_since_last_email(LOG_SVXLINK, 300)) + """
---------------------------------------------------------------------------------
-This message has been generated automatically. 
-Please review the errors above and take appropriate corrective actions.
-"""
+    3) last 300 lines of Svxlink log:
+    """ + "\n".join(tail_file_since_last_email(LOG_SVXLINK, 300)) + """
+    --------------------------------------------------------------------------------
+    This message has been generated automatically. 
+    Please review the errors above and take appropriate corrective actions.
+    """
 
-    subject = f"{gateway_name()} Svxlink Alert"
-    msg = MIMEText(content)
-    msg["Subject"] = subject
-    msg["From"] = SENDER
-    msg["To"] = RECIPIENT
+        msg = MIMEText(content)
+        msg["Subject"] = subject
+        msg["From"] = SENDER
+        msg["To"] = RECIPIENT
 
-    try:
-        log_print("[INFO] Attempting to send email...", YELLOW)
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(SENDER, PASSWORD)
-            server.send_message(msg)
-        log_print("[INFO] Email sent successfully!", GREEN)
-        pending_errors = [] 
-        last_email_time = datetime.now()
-        return True
-    except Exception as e:
-        now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        log_print(f"[ALERT] Error while sending email: {e}. Will retry in {current_retry_interval}s", RED)
-        pending_errors.append(f"{now}: {e}")
-        return False
+        try:
+            log_print("[INFO] Attempting to send email...", YELLOW)
+            with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                server.starttls()
+                server.login(SENDER, PASSWORD)
+                server.send_message(msg)
 
-# Schedules a new email
-def schedule_gmail(error_str):
-    global pending_errors, last_email_time, first_email, SKIP_ERRORS, EMAIL_THROTTLE
+            log_print("[INFO] Email sent successfully!", GREEN)
+            pending_errors = []
+            last_email_time = datetime.now()
+            current_retry_interval = EMAIL_RETRY_INTERVAL
+            last_email_success = True
+            return True
 
-    if SKIP_ERRORS.search(error_str):
-        log_print(f"[INFO] Ignored error for email scheduling: {error_str}", BLUE)
-        return
+        except Exception as e:
+            now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            log_print(f"[ALERT] Error while sending email: {e}. Will retry in {current_retry_interval}s", RED)
+            pending_errors.append(f"{now}: {e}")
+
+            # exponential backoff
+            current_retry_interval = min(int(current_retry_interval * 1.2), MAX_EMAIL_RETRY_INTERVAL)
+            last_email_success = False
+            return False
+
+# Schedules an error for Email sending
+def schedule_gmail(error_str, force_send=False):
+    global pending_errors, last_email_time, first_email, last_email_success, EMAIL_THROTTLE
 
     pending_errors.append(error_str)
     now = datetime.now()
     can_send = False
 
-    if first_email:
+    if force_send:
+        can_send = True
+    elif first_email:
         can_send = True
         first_email = False
-    elif (now - last_email_time).total_seconds() >= EMAIL_THROTTLE:
-        can_send = True
+    elif last_email_success:
+        if last_email_time is None or (now - last_email_time).total_seconds() >= EMAIL_THROTTLE:
+            can_send = True
+    else:
+        if last_email_time is None or (now - last_email_time).total_seconds() >= current_retry_interval:
+            can_send = True
 
     if can_send:
-        threading.Thread(target=send_pending_errors).start()
-    else :
+        if not email_sending_lock.locked():  
+            threading.Thread(target=send_pending_errors).start()
+    else:
         log_print("[INFO] EMail sender on cooldown, added to pending buffer.", YELLOW)
 
-# Periodically tries to send an email in case of internet connection loss
+# Periodically tries to send pending errors if the last attempt failed
 def periodic_email_sender():
-    global current_retry_interval, last_email_time, pending_errors, EMAIL_RETRY_INTERVAL, MAX_EMAIL_RETRY_INTERVAL, EMAIL_THROTTLE
+    global pending_errors, last_email_time, current_retry_interval, last_email_success, EMAIL_THROTTLE
 
     while True:
         now = datetime.now()
-        if pending_errors and (now - last_email_time).total_seconds() >= EMAIL_THROTTLE:
-            success = send_pending_errors()
-            if success:
-                current_retry_interval = EMAIL_RETRY_INTERVAL 
-            else:
-                current_retry_interval = min(
-                    int(current_retry_interval * 1.2),
-                    MAX_EMAIL_RETRY_INTERVAL
-                )
-                log_print(f"[INFO] Email retry interval increased to {current_retry_interval}s", BLUE)
-        time.sleep(current_retry_interval)
+        if pending_errors and not last_email_success:
+            if last_email_time is None or (now - last_email_time).total_seconds() >= current_retry_interval:
+                send_pending_errors()
+
+        elif pending_errors and last_email_success:
+            if last_email_time is None or (now - last_email_time).total_seconds() >= EMAIL_THROTTLE:
+                if not email_sending_lock.locked():
+                    threading.Thread(target=send_pending_errors).start()
+
+        time.sleep(1)
 # --- End: EMail functions --- #         
 
 # --- LogHandler --- #
@@ -277,9 +290,10 @@ class LogHandler(FileSystemEventHandler):
                     if match:
                         error_str = match.group(0)
                         log_print(f"[ALERT] Svxlink critical error detected: {error_str}. Attempting a svxlink environment restart...({failed_resets})", RED)
-                        schedule_gmail(error_str)
+                        schedule_gmail(error_str, force_send=False)
                         reset_aioc_with_restart()
 
+            # Executes full stop
             elif STOP_ERRORS.search(line):
                 with lock:
                     match = STOP_ERRORS.search(line)
@@ -287,15 +301,11 @@ class LogHandler(FileSystemEventHandler):
                         error_str = match.group(0)
                         log_print(f"[ALERT] Svxlink stop-level error detected: {error_str}. Stopping svxlink service and this script...", RED)
                         keep_blocked = True
-                        schedule_gmail(error_str)
-                        stop_svxlink()
-                        send_pending_errors()
-                        sys.exit(1) 
+                        schedule_gmail(error_str, force_send=True)
+                        time.sleep(5)
+                        force_stop()
 
-                    with open(LOG_SVXLINK, "r", encoding="utf-8", errors="replace") as f:
-                        f.seek(0, os.SEEK_END)
-                        self.position = f.tell()
-
+            # Sends an error message but does not take further action
             elif ERRORS_REGEX.search(line):
                 with lock:
                     match = ERRORS_REGEX.search(line)
@@ -303,7 +313,7 @@ class LogHandler(FileSystemEventHandler):
                         error_str = line
                         if not SKIP_ERRORS.search(error_str): # Skips errors for handler to catch a "better" line for EMail sender
                             log_print(f"[ALERT] Svxlink error-level error detected: {error_str}. No further action...", RED)
-                            schedule_gmail(error_str)
+                            schedule_gmail(error_str, force_send=False)
                         else:
                             log_print(f"[INFO] Ignored error: {error_str}", BLUE)
 # --- End: LogHandler --- #
@@ -456,12 +466,12 @@ def tail_file_since_last_email(filename, max_lines=300):
         except Exception:
             pass
 
-        if ts and ts > last_email_time:
+        if last_email_time is None or (ts and ts > last_email_time):
             result.append(line)
 
     if len(result) > max_lines:
         result = result[-max_lines:]
-        result.append("There were more than {max_lines} lines in the file, printing only last {max_lines}...")
+        result.append(f"There were more than {max_lines} lines in the file, printing only last {max_lines}...")
 
     return result
 # --- End: Loggers --- #
@@ -582,11 +592,15 @@ def reset_aioc_with_restart():
 def force_stop():
     try:
         subprocess.run(["sudo", "systemctl", "stop", "svxlink"], check=True)
-        subprocess.run(["sudo", "systemctl", "stop", "svxlink_healthcheck"], check=True)
+        subprocess.run(["sudo", "systemctl", "stop", "svxlink_healthcheck"], check=False) # optional script - depricated since 1.9.25
+        subprocess.run(["sudo", "systemctl", "stop", "svxlink_healthcheck_python"], check=True)
         log_print("[SYSTEM] Svxlink, Healthcheck and Python script stopped by force.", GREEN)
-        sys.exit(0)  
+
+        pid = os.getpid()
+        os.kill(pid, signal.SIGKILL)
+
     except subprocess.CalledProcessError as e:
-        log_print(f"[SYSTEM] Script encountered an error when stopping Svxlink and Healthcheck by force: {e}", RED)
+        log_print(f"[SYSTEM] Script encountered an error when stopping these scripts: {e}", RED)
         sys.exit(1)  
 
 # Stops only Svxlink
@@ -658,7 +672,6 @@ def restart_service(service):
                 failed_resets = 0
                 WDS_TIMEOUT = WDS_TIMEOUT_INIT
                 start_wds_timer()
-                log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
             return True
         else:
             log_print(f"[SYSTEM] Service '{service}' restarted successfully but crashed shortly after.", RED)
@@ -698,7 +711,7 @@ def check_freeze_rx():
             if elapsed >= TIMEOUT_RX and is_service_active("svxlink") and not is_restarting:
                 error_str = f"[ALERT] svxlink may be frozen! (RX ON > {TIMEOUT_RX}s). Attempting a svxlink environment restart...({failed_resets})"
                 log_print(error_str, RED)
-                schedule_gmail(error_str)
+                schedule_gmail(error_str, force_send=False)
                 time.sleep(1)
                 reset_aioc_with_restart()
             squelch_open_time = None
@@ -713,7 +726,7 @@ def check_freeze_tx():
             if elapsed >= TIMEOUT_TX and is_service_active("svxlink") and not is_restarting:
                 error_str = f"[ALERT] svxlink may be frozen! (TX ON > {TIMEOUT_TX}s). Attempting a svxlink environment restart...({failed_resets})"
                 log_print(error_str, RED)
-                schedule_gmail(error_str)
+                schedule_gmail(error_str, force_send=False)
                 time.sleep(1)
                 reset_aioc_with_restart()
             tx_on_time = None
@@ -725,7 +738,7 @@ def check_wds_timeout():
     with lock:
         error_str = f"[ALERT] svxlink may be frozen! (No WDS signal for {WDS_TIMEOUT}s). Restarting svxlink service...({failed_resets})"
         log_print(error_str, RED)
-        schedule_gmail(error_str)
+        schedule_gmail(error_str, force_send=False)
         restart_service("svxlink")
         WDS_TIMEOUT = min(WDS_TIMEOUT * 1.2, WDS_TIMEOUT_MAX)
         wds_timer = None
@@ -736,7 +749,8 @@ def start_wds_timer():
     if wds_timer:
         try:
             wds_timer.cancel()
-            log_print("[INFO] Previous WDS timer cancelled before starting new.", BLUE)
+            # debug
+            #log_print("[INFO] Previous WDS timer cancelled before starting new.", BLUE)
         except Exception as e:
             log_print(f"[WARNING] Could not cancel previous WDS timer: {e}", YELLOW)
     wds_timer = threading.Timer(WDS_TIMEOUT, check_wds_timeout)

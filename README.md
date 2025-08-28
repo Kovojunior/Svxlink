@@ -11,7 +11,7 @@ Finally, I encourage anyone interested in this hobby to explore its borders. My 
 It has been a joy to create these scripts, and I share them with the community in the spirit of helping, learning, and growing together in this incredible hobby.
 
 **Note / Disclaimer:**  
-The author is not responsible for any damage, data loss, or system errors that may occur while using this software. Use this program at your own risk. This project may contain errors, either in the code or in the documentation. If you encounter any mistakes, I encourage you to report them. The preferred way to report issues is through the GitHub repository. Otherwise, please send a message to info@pmr446.si via EMail.
+The author is not responsible for any damage, data loss, or system errors that may occur while using this software. Use this program at your own risk. This project may contain errors, either in the code or in the documentation. If you encounter any mistakes, I encourage you to report them. The preferred way to report issues is through the GitHub repository. Otherwise, please send a message to info@pmr.si via EMail.
 
 The author does not claim any rights over the SvxLink program itself; this project is an independent tool created to monitor and assist SvxLink, which remains the intellectual property of its original developers.
 
@@ -105,7 +105,7 @@ The script will prompt for licence acceptance and guide you through installation
 
     - **WireGuard installation:**  
         `install_wireguard` runs automatically.  
-        User does **not** need to provide input, but they must either configure the system themselves or contact **info@pmr446.si** for assistance.  
+        User does **not** need to provide input, but they must either configure the system themselves or contact **info@pmr.si** for assistance.  
             
 
     - **Completion message:**  
@@ -277,18 +277,18 @@ The script will prompt for licence acceptance and guide you through installation
 
     - **Configuration notice:**  
         ```bash
-        ⚠️ Configuration files cannot be uploaded online due to security reasons. For setup, please contact info@pmr446.si
+        ⚠️ Configuration files cannot be uploaded online due to security reasons. For setup, please contact info@pmr.si
         ```
         User is informed that configuration files will **not** be provided automatically.  
         To complete setup, the user must:  
         - Configure WireGuard manually **or**  
-        - Contact **info@pmr446.si** for support and secure configuration exchange.
+        - Contact **info@pmr.si** for support and secure configuration exchange.
 
     - **User input summary:**  
         No interactive input required during script execution.  
         User must take **post-installation action** (manual configuration or contacting administrator).  
         
-        **Note:** Users requiring a licence (`category II - Slovenia`) must enable a **WireGuard** connection to a **pmr.si administrator**. Read [Licence file](https://github.com/Kovojunior/Svxlink/blob/main/LICENCE.txt) for more information. To setup accordingly contact info@pmr446.si.
+        **Note:** Users requiring a licence (`category II - Slovenia`) must enable a **WireGuard** connection to a **pmr.si administrator**. Read [Licence file](https://github.com/Kovojunior/Svxlink/blob/main/LICENCE.txt) for more information. To setup accordingly contact info@pmr.si.
     <br></br>
 
 8. `Bash healthcheck installer (depricated)`, installs an older version of bash healthcheck script. Depricated since 1.9.2025. It creates a background watchdog service to ensure SvxLink stays active. Since it does not take action to user or svxlink input, it is essentially a dumb version of Python script.
