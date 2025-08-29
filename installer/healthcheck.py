@@ -34,9 +34,9 @@ EMAIL_RETRY_INTERVAL = 300 # 5 minutes
 MAX_EMAIL_RETRY_INTERVAL = 86400 # 1 day
 
 # ! Configure before using this script! Not included on github
-SENDER = ""
-PASSWORD = ""
-RECIPIENT = ""
+SENDER = "SENDER_EMAIL"
+PASSWORD = "SENDER_PASSWORD"
+RECIPIENT = "RECIPIENT_EMAIL"
 # !!!
 
 LOG_SVXLINK = "/var/log/svxlink"
@@ -165,6 +165,8 @@ def send_pending_errors():
             log_print(f"[ALERT] Error while sending email: {e}. Will retry in {current_retry_interval}s", RED)
             pending_errors.append(f"{now}: {e}")
 
+            last_email_time = now  # also logs if sending triggered Exception (failed)
+
             # exponential backoff
             current_retry_interval = min(int(current_retry_interval * 1.2), MAX_EMAIL_RETRY_INTERVAL)
             last_email_success = False
@@ -202,16 +204,15 @@ def periodic_email_sender():
 
     while True:
         now = datetime.now()
-        if pending_errors and not last_email_success:
-            if last_email_time is None or (now - last_email_time).total_seconds() >= current_retry_interval:
-                send_pending_errors()
-
-        elif pending_errors and last_email_success:
-            if last_email_time is None or (now - last_email_time).total_seconds() >= EMAIL_THROTTLE:
-                if not email_sending_lock.locked():
-                    threading.Thread(target=send_pending_errors).start()
-
-        time.sleep(1)
+        if pending_errors:
+            if not email_sending_lock.locked():
+                if last_email_success:
+                    if last_email_time is None or (now - last_email_time).total_seconds() >= EMAIL_THROTTLE:
+                        threading.Thread(target=send_pending_errors).start()
+                else:
+                    if last_email_time is None or (now - last_email_time).total_seconds() >= current_retry_interval:
+                        threading.Thread(target=send_pending_errors).start()
+        time.sleep(5) 
 # --- End: EMail functions --- #         
 
 # --- LogHandler --- #
@@ -281,7 +282,7 @@ class LogHandler(FileSystemEventHandler):
                 with lock:
                     WDS_TIMEOUT = WDS_TIMEOUT_INIT
                     start_wds_timer()
-                    log_print("[INFO] WDS signal detected, watchdog timer reset.", BLUE)
+                    #log_print("[INFO] WDS signal detected, watchdog timer reset.", BLUE)
 
             # Executes forced svxlink and AIOC restart due to critical error
             elif RESTART_ERRORS.search(line) and not is_restarting and (failed_resets < MAX_FAILED_RESETS):
@@ -407,6 +408,7 @@ def log(msg, color=RESET):
     with open(LOG_FILE, "a", encoding="utf-8", errors="replace") as f:
         f.write(line + "\n")
 
+# Backups and clears log
 def backup_and_clear_log_and_reset_handler(old_handler=None):
     global event_handler, LOG_SVXLINK, LOG_SVXLINK_BACKUP
     try:
@@ -573,18 +575,31 @@ def run_aioc_settings():
     
 # Resets AIOC and executes a svxlink restart
 def reset_aioc_with_restart():
-    global is_restarting
+    global is_restarting, failed_resets, MAX_FAILED_RESETS, WDS_TIMEOUT, WDS_TIMEOUT_MAX
     is_restarting = True
     try:
+        if failed_resets >= MAX_FAILED_RESETS:
+            log_print(f"[ALERT] Restart of 'svxlink' blocked. Too many failed attempts ({failed_resets})", RED)
+            schedule_gmail(f"Svxlink has exceeded {MAX_FAILED_RESETS} failed resets! Stopping services.", force_send=True)
+            time.sleep(5)
+            force_stop()
+            return False
+
         time.sleep(1)
-        if stop_svxlink() and backup_and_clear_log_and_reset_handler(old_handler=event_handler) and reset_aioc_device(AIOC_NAME) and run_aioc_settings() and restart_service("svxlink"):
+        success = stop_svxlink() and backup_and_clear_log_and_reset_handler(old_handler=event_handler) and reset_aioc_device(AIOC_NAME) and run_aioc_settings() and restart_service("svxlink")
+        if success:
             log_print("[SYSTEM] AIOC device reconfigured successfully and svxlink restarted.", GREEN)
+            failed_resets = 0
             return True
         else:
-            log_print("[SYSTEM] AIOC - Svxlink reconfiguration failure, check AIOC device!", RED)
+            #failed_resets += 1
+            #WDS_TIMEOUT = min(int(WDS_TIMEOUT * 1.2), WDS_TIMEOUT_MAX)
+            log_print(f"[SYSTEM] AIOC - Svxlink reconfiguration failure...({failed_resets}), WDS timer restared with backoff and set to {WDS_TIMEOUT}s", RED)
+            start_wds_timer()
             return False
     finally:
         is_restarting = False
+
 # --- End: USB scripts #
 
 # --- System services --- #
@@ -605,46 +620,52 @@ def force_stop():
 
 # Stops only Svxlink
 def stop_svxlink():
-    global wds_timer, tx_timer, squelch_timer, WDS_TIMEOUT
+    global wds_timer, tx_timer, squelch_timer, WDS_TIMEOUT, WDS_TIMEOUT_MAX
     try:
         # počistimo timerje, če obstajajo
         if wds_timer:
             wds_timer.cancel()
             wds_timer = None
-            log_print("[INFO] WDS watchdog timer cancelled.", BLUE)
+            log_print("[INFO] WDS watchdog timer cancelled because service stopped.", BLUE)
 
         if tx_timer:
             tx_timer.cancel()
             tx_timer = None
-            log_print("[INFO] TX timer cancelled.", BLUE)
+            log_print("[INFO] TX timer cancelled because service stopped.", BLUE)
 
         if squelch_timer:
             squelch_timer.cancel()
             squelch_timer = None
-            log_print("[INFO] Squelch timer cancelled.", BLUE)
+            log_print("[INFO] Squelch timer cancelled because service stopped.", BLUE)
         if is_service_active("svxlink"):
             subprocess.run(["sudo", "systemctl", "stop", "svxlink"], check=True)
             log_print("[SYSTEM] Svxlink stopped by force.", GREEN)
             start_wds_timer()
-            log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
+            #log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
             return True
         else:
+            #WDS_TIMEOUT = min(int(WDS_TIMEOUT * 1.2), WDS_TIMEOUT_MAX)
             log_print("[SYSTEM] Svxlink stop requested, but service is already inactive.", GREEN)
+            start_wds_timer()
             return True
     except subprocess.CalledProcessError as e:
         log_print(f"[SYSTEM] Script encountered an error when stopping Svxlink by force: {e}", RED)
         log_print("[SYSTEM] Svxlink stopped by force.", GREEN)
         start_wds_timer()
-        log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
+        #log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
         return False
 
 # Restarts a system service
 def restart_service(service):
-    global wds_timer, tx_timer, squelch_timer, failed_resets, RESET_TIMEOUT, WDS_TIMEOUT, MAX_FAILED_RESETS, WDS_TIMEOUT_MAX, WDS_TIMEOUT_INIT, keep_blocked
+    global wds_timer, tx_timer, squelch_timer, failed_resets
+    global RESET_TIMEOUT, WDS_TIMEOUT, MAX_FAILED_RESETS, WDS_TIMEOUT_MAX, WDS_TIMEOUT_INIT, keep_blocked
 
     try:
-        if service == "svxlink" and failed_resets >= MAX_FAILED_RESETS:
-            log_print(f"[ALERT] Restart of '{service}' prevented. Too many failed attempts ({failed_resets}).", RED)
+        if failed_resets >= MAX_FAILED_RESETS:
+            log_print(f"[ALERT] Restart of 'svxlink' blocked. Too many failed attempts ({failed_resets})", RED)
+            schedule_gmail(f"Svxlink has exceeded {MAX_FAILED_RESETS} failed resets! Stopping services.", force_send=True)
+            time.sleep(5)
+            force_stop()
             return False
 
         if keep_blocked and service == "svxlink":
@@ -654,18 +675,45 @@ def restart_service(service):
         if service == "svxlink":
             if wds_timer:
                 wds_timer.cancel()
-                log_print("[INFO] WDS timer cancelled.", BLUE)
+                log_print("[INFO] WDS timer cancelled because service restarted.", BLUE)
             if tx_timer:
                 tx_timer.cancel()
-                log_print("[INFO] TX timer cancelled.", BLUE)
+                log_print("[INFO] TX timer cancelled because service restarted.", BLUE)
             if squelch_timer:
                 squelch_timer.cancel()
-                log_print("[INFO] RX timer cancelled.", BLUE)
+                log_print("[INFO] RX timer cancelled because service restarted.", BLUE)
 
-        subprocess.run(["sudo", "systemctl", "restart", service], check=True)
+        try:
+            subprocess.run(
+                ["sudo", "systemctl", "restart", service],
+                check=True,
+                timeout=15
+            )
+        except subprocess.TimeoutExpired:
+            log_print(f"[ALERT] Restart of '{service}' timed out after 15s! Retrying...", RED)
+            failed_resets += 1
+            return restart_service(service)  # recursive retry
+        except subprocess.CalledProcessError as e:
+            log_print(f"[SYSTEM] Error when restarting '{service}': {e}. Retrying...", RED)
+            failed_resets += 1
+            return restart_service(service)
+
         time.sleep(RESET_TIMEOUT)
 
-        if is_service_active(service):
+        try:
+            result = subprocess.run(
+                ["systemctl", "is-active", service],
+                capture_output=True,
+                text=True,
+                timeout=15
+            )
+            active = result.stdout.strip() == "active"
+        except subprocess.TimeoutExpired:
+            log_print(f"[ALERT] is_service_active('{service}') timed out after 15s! Retrying restart...", RED)
+            failed_resets += 1
+            return restart_service(service)
+
+        if active:
             log_print(f"[SYSTEM] Service '{service}' restarted successfully.", GREEN)
 
             if service == "svxlink":
@@ -674,25 +722,25 @@ def restart_service(service):
                 start_wds_timer()
             return True
         else:
-            log_print(f"[SYSTEM] Service '{service}' restarted successfully but crashed shortly after.", RED)
+            log_print(f"[SYSTEM] Service '{service}' restarted but crashed shortly after.", RED)
 
             if service == "svxlink":
-                    failed_resets += 1
-                    WDS_TIMEOUT = min(int(WDS_TIMEOUT * 1.2), WDS_TIMEOUT_MAX)
-                    start_wds_timer()
-                    log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s (backoff, failed resets: {failed_resets})", BLUE)
-
+                failed_resets += 1
+                WDS_TIMEOUT = min(int(WDS_TIMEOUT * 1.2), WDS_TIMEOUT_MAX)
+                start_wds_timer()
+                log_print(
+                    f"[INFO] WDS watchdog timer started with backoff and set to {WDS_TIMEOUT}s...({failed_resets})",
+                    BLUE
+                )
             return False
 
-    except subprocess.CalledProcessError as e:
-        log_print(f"[SYSTEM] Script encountered an error when restarting '{service}': {e}", RED)
-
+    except Exception as e:
+        log_print(f"[SYSTEM] Unexpected error in restart_service('{service}'): {e}", RED)
         if service == "svxlink":
             failed_resets += 1
             WDS_TIMEOUT = min(int(WDS_TIMEOUT * 1.2), WDS_TIMEOUT_MAX)
             start_wds_timer()
-            log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s (backoff, failed resets: {failed_resets})", BLUE)
-            failed_resets += 1
+            log_print(f"[INFO] WDS watchdog timer started with backoff and set to {WDS_TIMEOUT}s...({failed_resets})", BLUE)
         return False
 
 # Returns bool status of systen service activity
@@ -739,9 +787,13 @@ def check_wds_timeout():
         error_str = f"[ALERT] svxlink may be frozen! (No WDS signal for {WDS_TIMEOUT}s). Restarting svxlink service...({failed_resets})"
         log_print(error_str, RED)
         schedule_gmail(error_str, force_send=False)
-        restart_service("svxlink")
-        WDS_TIMEOUT = min(WDS_TIMEOUT * 1.2, WDS_TIMEOUT_MAX)
+        if wds_timer:
+            try:
+                wds_timer.cancel()
+            except:
+                pass
         wds_timer = None
+        restart_service("svxlink")
 
 # Starts WDS timer safely, without leaving some open
 def start_wds_timer():
@@ -757,7 +809,7 @@ def start_wds_timer():
     wds_timer.daemon = True
     wds_timer.start()
     # debug
-    #log_print(f"[INFO] WDS watchdog timer started with {WDS_TIMEOUT}s", BLUE)
+    log_print(f"[INFO] Timer: WDS watchdog timer (re)started with {WDS_TIMEOUT}s", BLUE)
 # --- End: HealthCheck functions --- #
 # --- End: Functions --- #
 

@@ -236,73 +236,90 @@ proc link_already_active {name} {
 #
 # Executed once every whole minute
 #
-# 
 proc every_minute {} {
-  global wds_time_min
-  global active_module
-  global auto_mode_triggered
-  variable wds_timer_min
+    global wds_time_min
+    global active_module
+    global auto_mode_triggered
+    variable wds_timer_min
 
-  # Preverjanje WDS signala
-  if {$wds_timer_min > 0} {
-    set wds_timer_min [expr $wds_timer_min - 1]
-    if {$wds_timer_min == 0} {
-      puts "SimplexLogic: WDS signal"
-      set wds_timer_min $wds_time_min
+    # --- WDS signal ---
+    if {$wds_timer_min > 0} {
+        set wds_timer_min [expr {$wds_timer_min - 1}]
+        if {$wds_timer_min == 0} {
+            puts "SimplexLogic: WDS signal"
+            set wds_timer_min $wds_time_min
+        }
     }
-  }
 
-  # Povezava pade in aktivni modul je FRN
-  if {[catch {exec ping -c 1 8.8.8.8} result] && $active_module == "Frn"} {
-    puts "SimplexLogic: Internet connection lost. Switching to the PARROT mode."
-    injectDtmf "#1#"
-    playSilence 1500
-    Frn::playMsg "connection_lost"
-    playSilence 100
-    set auto_mode_triggered 1
-  } elseif {![catch {exec ping -c 1 8.8.8.8} result] && $active_module == "Parrot" && $auto_mode_triggered} {
-    injectDtmf "#2#"
-    puts "SimplexLogic: Internet connection restored. Returning back to the FRN module."
-    playSilence 1500
-    Frn::playMsg "connection_restored"
-    playSilence 100
-    set auto_mode_triggered 0
-  }
+    # --- PARROT → FRN: ob internetu ---
+    if {![catch {exec ping -c 1 -W 1 8.8.8.8} result] && $active_module == "Parrot" && $auto_mode_triggered} {
+        injectDtmf "#2#"
+        puts "SimplexLogic: Internet connection restored. Returning back to the FRN module."
+        playSilence 1500
+        Frn::playMsg "connection_restored"
+        playSilence 100
+        set auto_mode_triggered 0
+    }
 
-  Logic::every_minute
+    Logic::every_minute
 }
 
 #
 # Executed once every second
 #
 proc every_second {} {
-  global active_module
-  global frn_time_sec
-  global auto_mode_triggered
-  variable frn_timer_sec
+    global active_module
+    global frn_time_sec
+    global auto_mode_triggered
+    variable frn_timer_sec
+    variable frn_ping_timer
 
-  if {$active_module == ""} {
-    if {$frn_timer_sec > 0} {
-      set frn_timer_sec [expr $frn_timer_sec - 1]
-      if {$frn_timer_sec == 0 && !$auto_mode_triggered && ![catch {exec ping -c 1 8.8.8.8} result]} {
-        puts "SimplexLogic: FRN restart timer elapsed. No active module, activating FRN module."
+    # --- FRN restart logika, ko ni modula ---
+    if {$active_module == ""} {
+        if {$frn_timer_sec > 0} {
+            set frn_timer_sec [expr {$frn_timer_sec - 1}]
+            if {$frn_timer_sec == 0} {
+                # Ping preverjanje
+                if ![catch {exec ping -c 1 -W 1 8.8.8.8} result] {
+                    puts "SimplexLogic: FRN restart timer elapsed. No active module, activating FRN module."
+                    injectDtmf "2#"
+                } else {
+                    puts "SimplexLogic: No internet, activating PARROT module."
+                    injectDtmf "#1#"
+                    playSilence 1500
+                    Frn::playMsg "connection_lost"
+                    playSilence 100
+                    set auto_mode_triggered 1
+                }
+                set frn_timer_sec $frn_time_sec
+            }
+        }
+    } else {
         set frn_timer_sec $frn_time_sec
-        injectDtmf "2#"
-      } elseif {$frn_timer_sec == 0 && $auto_mode_triggered} {
-        puts "SimplexLogic: FRN restart timer elapsed. No active module but no internet connection, returning to the PARROT mode."
-	injectDtmf "1#"
-	playSilence 1500
-   	Frn::playMsg "connection_lost"
-    	playSilence 100
-        set frn_timer_sec $frn_time_sec
-      }
     }
-  } else {
-    set frn_timer_sec $frn_time_sec
-  }
 
-  Logic::every_second
+    # --- Ping FRN → PARROT vsakih 5 sekund ---
+    if {$active_module == "Frn"} {
+        if {![info exists frn_ping_timer]} {
+            set frn_ping_timer 5
+        }
+        incr frn_ping_timer -1
+        if {$frn_ping_timer <= 0} {
+            if {[catch {exec ping -c 1 -W 1 8.8.8.8} result]} {
+                puts "SimplexLogic: Internet lost (FRN mode). Switching to PARROT."
+                injectDtmf "#1#"
+                playSilence 1500
+                Frn::playMsg "connection_lost"
+                playSilence 100
+                set auto_mode_triggered 1
+            }
+            set frn_ping_timer 5
+        }
+    }
+
+    Logic::every_second
 }
+
 
 #
 # Executed each time the transmitter is turned on or off
