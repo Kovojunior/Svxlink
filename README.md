@@ -445,6 +445,8 @@ The script will prompt for licence acceptance and guide you through installation
 
 `FRN_settings.sh` is a Bash script designed to assist users in updating the **ModuleFrn.conf** configuration file for SvxLink, ensuring proper PMR.SI channel settings, user identification, and location information. The script also updates the **svxlink.conf** file with the user's callsign, making SvxLink ready for immediate use with the FRN network.
 
+**Important notice: User must configure the FRN account beforehand. See [Java FRN Client - Please read](https://freeradionetwork.de/please_read.html) for more information!**
+
 ### 2.1 Components
 The script is built using **standard Linux utilities** and **libraries**:
 - **Bash** for scripting.  
