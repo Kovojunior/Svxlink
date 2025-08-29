@@ -13,12 +13,23 @@ get_computer_type() {
             "rpi3") echo "RPi3" ;;
             "orangepione") echo "OPi3" ;;
             "orangepizero") echo "OPiZero" ;;
-            *) echo "$BOARD" ;;  
+            *) echo "$BOARD" ;;
         esac
+
+    elif [ -f /proc/device-tree/model ]; then
+        MODEL=$(tr -d '\0' < /proc/device-tree/model)
+        case "$MODEL" in
+            *"Raspberry Pi 4"*) echo "RPi4" ;;
+            *"Raspberry Pi 3"*) echo "RPi3" ;;
+            *"Raspberry Pi Zero"*) echo "RPiZero" ;;
+            *) echo "$MODEL" ;;
+        esac
+
     else
         echo "UnknownARM"
     fi
 }
+
 
 read_existing() {
     local key="$1"
