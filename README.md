@@ -232,7 +232,7 @@ The script will prompt for licence acceptance and guide you through installation
 
         These values are written into `healthcheck.py`.  
         Script verifies that email settings were correctly applied.
-        **Note:** configurator takes inputs one by one, user must press Enter to apply changes after each input.
+        **Note:** configurator takes inputs one by one, user must press Enter to apply changes after each input. User can generate an APP password for the Gmail account [on this link](https://myaccount.google.com/apppasswords) or follow google instructions.
 
     - **Creating Python systemd service:**
         ```bash
