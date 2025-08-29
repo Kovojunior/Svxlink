@@ -23,6 +23,8 @@ The author does not claim any rights over the SvxLink program itself; this proje
 
 ## 1. SVXLINK INSTALLER SCRIPT FOR LINUX SBCs
 
+**IMPORTANT NOTICE: script only officially supports RPi4B and OPi3Zero boards with Debian distributions. I recommend using Debian Lite images. For OS installation [Raspberry Pi Imager](https://www.raspberrypi.com/software/) can be used. Use Raspberry Pi OS Lite (debian) on RPi and Armbian OS minimal on OPi boards. 32-bit boards are not compatible!**
+
 `installer.sh` is a Bash script designed to automate the installation of **SvxLink** on single-board computers (SBCs) such as Raspberry Pi and Orange Pi. It ensures all necessary dependencies, libraries, and configurations are applied for smooth operation.
 Currently this script **only** (officially) supports `RPi4B` devices.
 
@@ -457,7 +459,7 @@ No external libraries are required beyond default Linux system tools.
 The script targets the `ModuleFrn.conf` file located at `/etc/svxlink/svxlink.d/ModuleFrn.conf`. If the file does not exist, the script exits with an error message.
 
 2. **Computer type detection:**
-`get_computer_type()` identifies the type of single-board computer (SBC) running the script by reading `/etc/armbian-release`. Supported types include **RPi4**, **RPi3**, **OPi3**, and **OPiZero**. Unknown boards are labeled as `UnknownARM`.
+`get_computer_type()` identifies the type of single-board computer (SBC) running the script by reading `/etc/armbian-release` or `/proc/device-tree/model`, depending on installation. Supported types include **RPi4**, **RPi3**, **OPi3**, and **OPiZero**. Unknown boards are labeled as `UnknownARM`.
 
 3. **User input and existing value retrieval:**
 The function `read_existing` retrieves existing values from the configuration file for keys such as `EMAIL_ADDRESS` and `DYN_PASSWORD`. Users are prompted to confirm or update each value, and defaults are pre-filled with existing settings.
