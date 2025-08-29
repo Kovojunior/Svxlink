@@ -15,7 +15,7 @@ from watchdog.events import FileSystemEventHandler
 
 # Settings
 SERVICE = "svxlink"
-MAX_RESTARTS = 5
+MAX_RESTARTS = 5 # Depricated
 RESTART_COUNT = 0
 LOG_FILE = "/var/log/svxlink_healthcheck.log"
 RESET_TIMEOUT = 2
@@ -28,14 +28,14 @@ TIMEOUT_RX_DEFAULT = 180 + TOLERANCE
 TIMEOUT_TX_DEFAULT = 180 + TOLERANCE
 WDS_TIMEOUT_DEFAULT = 180 + TOLERANCE
 WDS_TIMEOUT_MAX = 86400 # 1 day
-MAX_FAILED_RESETS = 59 # Maximum number of failed resets in a row, runs up to 30 days
+MAX_FAILED_RESETS = 1 # Maximum number of failed resets in a row, runs up to 30 days
 EMAIL_THROTTLE = 3600 # One hour
 EMAIL_RETRY_INTERVAL = 300 # 5 minutes
 MAX_EMAIL_RETRY_INTERVAL = 86400 # 1 day
 
 # ! Configure before using this script! Not included on github
 SENDER = "SENDER_EMAIL"
-PASSWORD = "SENDER_PASSWORD"
+PASSWORD = "SENDER_EMAIL_APP_PASSWORD"
 RECIPIENT = "RECIPIENT_EMAIL"
 # !!!
 
@@ -501,7 +501,7 @@ def find_usb_device_by_name(name=AIOC_NAME):
                 log_print(f"[SYSTEM] Found USB device: {device}", GREEN)
                 return device
 
-        log_print(f"[SYSTEM] Script couldn't find a device called'{name}'.", RED)
+        log_print(f"[SYSTEM] Script couldn't find a device called' {name}'.", RED)
         return None
 
     except Exception as e:
@@ -579,7 +579,7 @@ def reset_aioc_with_restart():
     is_restarting = True
     try:
         if failed_resets >= MAX_FAILED_RESETS:
-            log_print(f"[ALERT] Restart of 'svxlink' blocked. Too many failed attempts ({failed_resets})", RED)
+            log_print(f"[ALERT] Restart of 'svxlink' blocked. Too many failed attempts...({failed_resets})", RED)
             schedule_gmail(f"Svxlink has exceeded {MAX_FAILED_RESETS} failed resets! Stopping services.", force_send=True)
             time.sleep(5)
             force_stop()
@@ -662,7 +662,7 @@ def restart_service(service):
 
     try:
         if failed_resets >= MAX_FAILED_RESETS:
-            log_print(f"[ALERT] Restart of 'svxlink' blocked. Too many failed attempts ({failed_resets})", RED)
+            log_print(f"[ALERT] Restart of 'svxlink' blocked. Too many failed attempts...({failed_resets})", RED)
             schedule_gmail(f"Svxlink has exceeded {MAX_FAILED_RESETS} failed resets! Stopping services.", force_send=True)
             time.sleep(5)
             force_stop()
