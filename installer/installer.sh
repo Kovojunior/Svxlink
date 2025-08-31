@@ -67,6 +67,10 @@ install_svxlink() {
 }
 
 update_svxlink() {
+
+    echo -e "\e[1;34m=== Installing netcat ===\e[0m"
+    sudo apt install netcat-openbsd
+
     MODE=$1   # full_install or update_svxlink
 
     # Creates backup dir

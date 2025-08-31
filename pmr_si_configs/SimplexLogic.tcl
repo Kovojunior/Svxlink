@@ -232,6 +232,14 @@ proc link_already_active {name} {
   Logic::link_already_active $name;
 }
 
+# Checks if pmr.si FRN server runs
+proc check_port {host port} {
+    if {[catch {exec nc -z -w1 $host $port} result]} {
+        return 0
+    } else {
+        return 1
+    }
+}
 
 #
 # Executed once every whole minute
@@ -251,14 +259,21 @@ proc every_minute {} {
         }
     }
 
-    # --- PARROT → FRN: ob internetu ---
-    if {![catch {exec ping -c 1 -W 1 8.8.8.8} result] && $active_module == "Parrot" && $auto_mode_triggered} {
-        injectDtmf "#2#"
-        puts "SimplexLogic: Internet connection restored. Returning back to the FRN module."
-        playSilence 1500
-        Frn::playMsg "connection_restored"
-        playSilence 100
-        set auto_mode_triggered 0
+    # --- PARROT → FRN: internet OK and check_port OK ---
+    if {$active_module == "Parrot" && $auto_mode_triggered} {
+        set net_ok [catch {exec ping -c 1 -W 1 8.8.8.8} result]
+        set port_ok [check_port "pmr.si" 10024]
+
+        if {!$net_ok && $port_ok} {
+            injectDtmf "#2#"
+            puts "SimplexLogic: Internet and FRN server connection restored. Switching back to FRN."
+            playSilence 1500
+            Frn::playMsg "connection_restored"
+            playSilence 100
+            set auto_mode_triggered 0
+        } else {
+            puts "SimplexLogic: Cannot switch to FRN, internet or FRN server unreachable. Staying on PARROT."
+        }
     }
 
     Logic::every_minute
@@ -274,17 +289,19 @@ proc every_second {} {
     variable frn_timer_sec
     variable frn_ping_timer
 
-    # --- FRN restart logika, ko ni modula ---
+    # --- FRN restart logic, no Svxlink module runs atm ---
     if {$active_module == ""} {
         if {$frn_timer_sec > 0} {
             set frn_timer_sec [expr {$frn_timer_sec - 1}]
             if {$frn_timer_sec == 0} {
-                # Ping preverjanje
-                if ![catch {exec ping -c 1 -W 1 8.8.8.8} result] {
+                set net_ok [catch {exec ping -c 1 -W 1 8.8.8.8} result]
+                set port_ok [check_port "pmr.si" 10024]
+
+                if {!$net_ok && $port_ok} {
                     puts "SimplexLogic: FRN restart timer elapsed. No active module, activating FRN module."
                     injectDtmf "2#"
                 } else {
-                    puts "SimplexLogic: No internet, activating PARROT module."
+                    puts "SimplexLogic: No internet connection or FRN server unreachable, activating PARROT module."
                     injectDtmf "#1#"
                     playSilence 1500
                     Frn::playMsg "connection_lost"
@@ -298,23 +315,33 @@ proc every_second {} {
         set frn_timer_sec $frn_time_sec
     }
 
-    # --- Ping FRN → PARROT vsakih 5 sekund ---
+    # --- Ping FAILS: FRN → PARROT (every 4 seconds) ---
     if {$active_module == "Frn"} {
-        if {![info exists frn_ping_timer]} {
-            set frn_ping_timer 5
-        }
-        incr frn_ping_timer -1
-        if {$frn_ping_timer <= 0} {
-            if {[catch {exec ping -c 1 -W 1 8.8.8.8} result]} {
-                puts "SimplexLogic: Internet lost (FRN mode). Switching to PARROT."
-                injectDtmf "#1#"
-                playSilence 1500
-                Frn::playMsg "connection_lost"
-                playSilence 100
-                set auto_mode_triggered 1
-            }
-            set frn_ping_timer 5
-        }
+      if {![info exists frn_ping_timer]} {
+          set frn_ping_timer 4
+      }
+      incr frn_ping_timer -1
+      if {$frn_ping_timer <= 0} {
+          set net_ok [catch {exec ping -c 1 -W 1 8.8.8.8} result]
+          set port_ok [check_port "pmr.si" 10024]
+
+          if {$net_ok || !$port_ok} {
+              puts "SimplexLogic: Internet connection lost or FRN server unreachable. Switching to PARROT."
+              injectDtmf "#1#"
+              playSilence 1500
+              Frn::playMsg "connection_lost"
+              playSilence 100
+              set auto_mode_triggered 1
+          }
+          set frn_ping_timer 4
+      }
+    }
+
+    # --- Debug check_port ---
+    if {[check_port "pmr.si" 10024]} {
+        #puts "DEBUG: pmr.si:10024 OK"
+    } else {
+        #puts "DEBUG: pmr.si:10024 FAIL"
     }
 
     Logic::every_second
