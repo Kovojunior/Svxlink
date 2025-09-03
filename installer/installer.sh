@@ -64,6 +64,9 @@ install_svxlink() {
     echo ""
     tar xvjf svxlink-sounds-en_US-heather-16k-24.02.tar.bz2
     ln -sfn en_US-heather-16k en_US
+
+    echo -e "\e[1;34m=== Adding permissions for voice_mail ===\e[0m"
+    chmod 666 /var/spool/svxlink/voice_mail
 }
 
 update_svxlink() {
