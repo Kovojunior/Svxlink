@@ -68,8 +68,10 @@ install_svxlink() {
 
 update_svxlink() {
 
-    echo -e "\e[1;34m=== Installing netcat ===\e[0m"
-    sudo apt install netcat-openbsd
+    echo -e "\e[1;34m=== Installing Hping3 and adding permissions for svxlink ===\e[0m"
+    sudo apt install hping3 -y
+    echo 'svxlink ALL=(ALL) NOPASSWD: /usr/sbin/hping3' | sudo tee /etc/sudoers.d/hping3
+    sudo chmod 440 /etc/sudoers.d/hping3
 
     MODE=$1   # full_install or update_svxlink
 

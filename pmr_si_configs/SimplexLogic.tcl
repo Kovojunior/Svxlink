@@ -252,7 +252,7 @@ proc check_port {host port} {
 }
 
 #
-# Executed once every whole minute
+# Executed once every whole minute - Svxlink already tries to reconnect 10 times within 161s in ModuleFRN
 #
 proc every_minute {} {
     global wds_time_min
@@ -276,7 +276,6 @@ proc every_minute {} {
             set frn_check_timer 5
         }
         set frn_check_timer [expr {$frn_check_timer - 1}]
-        puts $frn_check_timer
 
         if {$frn_check_timer <= 0} {
             set port_ok [check_port "pmr.si" 10024]
