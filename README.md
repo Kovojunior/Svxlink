@@ -598,6 +598,8 @@ The script is built using **standard Linux utilities** and libraries:
 
 No external libraries or packages beyond default Linux system tools are required.
 
+**Note:** script will also install package called **NetCat**. It is used to test server port availability inside `SimplexLogic.tcl`.
+
 ### 3.2 Functionality
 1. **File mapping and target paths:**
 The script defines a list of **source URLs** and their corresponding **target paths** on the system using an associative array `files`. This includes configuration scripts (`.tcl` and `.conf`) in `/usr/share/svxlink/events.d` and `/etc/svxlink/svxlink.d`, as well as **custom sound files** in `/usr/share/svxlink/sounds/en_US/Frn`.
