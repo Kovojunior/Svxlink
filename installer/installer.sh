@@ -169,6 +169,9 @@ remove_svxlink() {
     echo ""
     echo -e "\e[1;34m=== Removing svxlink directories and script files ===\e[0m"
     rm -rf /etc/svxlink /usr/share/svxlink /var/log/svxlink /var/log/svxlink_healthcheck /etc/svxlink_backups /var/log/svxlink_python /usr/src/svxlink /tmp/svxlink_install/AIOC_settings.sh /tmp/svxlink_install/FRN_settings.sh /tmp/svxlink_install/update_svxlink.sh /tmp/svxlink_install/healthcheck.py
+    sudo rm -f /etc/sudoers.d/hping3
+    sudo apt remove --purge -y hping3
+    sudo apt autoremove -y
 
     echo ""
     echo -e $'\e[1;32m✅ Svxlink, configuration files and healthcheck successfully removed!\e[0m\n'
