@@ -161,12 +161,12 @@ def send_pending_errors():
             return True
 
         except Exception as e:
-            now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            now = datetime.now()
+            log_str = now.strftime("%d-%m-%Y %H:%M:%S")
             log_print(f"[ALERT] Error while sending email: {e}. Will retry in {current_retry_interval}s", RED)
-            pending_errors.append(f"{now}: {e}")
-
-            last_email_time = now  # also logs if sending triggered Exception (failed)
-
+            pending_errors.append(f"{log_str}: {e}")
+            last_email_time = now 
+            
             # exponential backoff
             current_retry_interval = min(int(current_retry_interval * 1.2), MAX_EMAIL_RETRY_INTERVAL)
             last_email_success = False
