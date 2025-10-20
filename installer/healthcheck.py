@@ -19,7 +19,7 @@ MAX_RESTARTS = 5 # Depricated
 RESTART_COUNT = 0
 LOG_FILE = "/var/log/svxlink_healthcheck.log"
 RESET_TIMEOUT = 2
-TOLERANCE = 15
+TOLERANCE = 20
 TIMEOUT_RX = 0
 TIMEOUT_TX = 0
 WDS_TIMEOUT = 0
@@ -36,7 +36,7 @@ MAX_EMAIL_RETRY_INTERVAL = 86400 # 1 day
 # ! Configure before using this script! Not included on github
 SENDER = "SENDER_EMAIL"
 PASSWORD = "SENDER_EMAIL_APP_PASSWORD"
-RECIPIENT = "RECIPIENT_EMAIL"
+RECIPIENT = "RECIPIENT_MAIL"
 # !!!
 
 LOG_SVXLINK = "/var/log/svxlink"
@@ -62,7 +62,7 @@ STOP_ERRORS = re.compile(
     re.IGNORECASE
 )
 # Ignores all lines that contain the following regex - avoiding users tempering with this script
-IGNORE_REGEX = re.compile(r"-- <S>")
+IGNORE_REGEX = re.compile(r":\s*--")
 # Skips error so handler can catch a "better" line 
 SKIP_ERRORS = re.compile(
     r'(QSO errored, deactivating module'
@@ -161,12 +161,15 @@ def send_pending_errors():
             return True
 
         except Exception as e:
-            now = datetime.now()
-            log_str = now.strftime("%d-%m-%Y %H:%M:%S")
-            log_print(f"[ALERT] Error while sending email: {e}. Will retry in {current_retry_interval}s", RED)
-            pending_errors.append(f"{log_str}: {e}")
-            last_email_time = now 
-            
+            timestamp = datetime.now()
+            log_print(
+                f"[ALERT] Error while sending email at {timestamp.strftime('%d-%m-%Y %H:%M:%S')}: {e}. Will retry in {current_retry_interval}s",
+                RED
+            )
+            pending_errors.append(f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}: {e}")
+
+            last_email_time = timestamp 
+
             # exponential backoff
             current_retry_interval = min(int(current_retry_interval * 1.2), MAX_EMAIL_RETRY_INTERVAL)
             last_email_success = False
@@ -832,7 +835,7 @@ def main():
 
     log_print("[SYSTEM] Svxlink monitoring activated ...", GREEN)
 
-    restart_service("svxlink")
+    threading.Timer(2, reset_aioc_with_restart).start() # Threading to avoid infinite loop
 
     global event_handler
     event_handler = LogHandler()
