@@ -442,7 +442,7 @@ proc dtmf_digit_received {digit duration} {
 # This function can be used to implement your own custom commands or to disable
 # DTMF commands that you do not want users to execute.
 proc dtmf_cmd_received {cmd} {
-  #global active_module
+  global active_module
 
   # Example: Ignore all commands starting with 3 in the EchoLink module.
   #          Allow commands that have four or more digits.
@@ -471,6 +471,43 @@ proc dtmf_cmd_received {cmd} {
   #  return 1
   #}
 
+  # Remove or change the following functions if you don't want said functionality
+  # Executes longer PMR.SI ad
+  if {$cmd == "990"} {
+    if {$active_module != ""} {
+      #puts "Executing external command"
+      #playMsg "Core" "online";
+      #playSilence 250
+      #playMsg "Core" "active_module";
+      #playMsg $active_module "name";
+      #playSilence 250
+      playSilence 500
+      # Change NODE_RECORDING to node file name. Recording must be made in 16bit PCM wav, mono, 16khz
+      playMsg "Frn" "NODE_RECORDING.wav"
+      playSilence 350
+      # Remove this if you are not part of PMR.SI
+      playMsg "Frn" "aktivnosti" 
+      exec ls &
+    }
+    return 1
+  }
+
+  # Executes a short PMR.SI ad
+  if {$cmd == "991"} {
+    if {$active_module != ""} {
+      #puts "Executing external command"
+      #playMsg "Core" "online";
+      #playSilence 250
+      #playMsg "Core" "active_module";
+      #playMsg $active_module "name";
+      #playSilence 250
+      playSilence 500
+      playMsg "Frn" "NODE_RECORDING.wav"
+      playSilence 350
+      exec ls &
+    }
+    return 1
+  }
   return 0
 }
 
