@@ -476,18 +476,17 @@ proc dtmf_cmd_received {cmd} {
   if {$cmd == "990"} {
     if {$active_module != ""} {
       #puts "Executing external command"
-      #playMsg "Core" "online";
+      #playMsg "Core" "online"
       #playSilence 250
-      #playMsg "Core" "active_module";
-      #playMsg $active_module "name";
+      #playMsg "Core" "active_module"
+      #playMsg $active_module "name"
       #playSilence 250
       playSilence 500
       # Change NODE_RECORDING to node file name. Recording must be made in 16bit PCM wav, mono, 16khz
-      playMsg "Frn" "NODE_RECORDING.wav"
+      playMsg "Frn" "NODE_RECORDING"
       playSilence 350
       # Remove this if you are not part of PMR.SI
       playMsg "Frn" "aktivnosti" 
-      exec ls &
     }
     return 1
   }
@@ -496,15 +495,14 @@ proc dtmf_cmd_received {cmd} {
   if {$cmd == "991"} {
     if {$active_module != ""} {
       #puts "Executing external command"
-      #playMsg "Core" "online";
+      #playMsg "Core" "online"
       #playSilence 250
-      #playMsg "Core" "active_module";
-      #playMsg $active_module "name";
+      #playMsg "Core" "active_module"
+      #playMsg $active_module "name"
       #playSilence 250
       playSilence 500
-      playMsg "Frn" "NODE_RECORDING.wav"
+      playMsg "Frn" "NODE_RECORDING"
       playSilence 350
-      exec ls &
     }
     return 1
   }
