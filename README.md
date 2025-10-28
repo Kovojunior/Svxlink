@@ -622,7 +622,7 @@ wget -O update_svxlink.sh https://raw.githubusercontent.com/Kovojunior/Svxlink/m
 sudo chmod +x update_svxlink.sh
 sudo bash update_svxlink.sh
 ```
-Upon execution, the script will automatically update the PMR.SI configuration and sound files, ensuring that SvxLink runs with the latest standard. All critical operations, such as download status and file permissions, are logged and displayed in the terminal.
+Upon execution, the script will automatically update the PMR.SI configuration and sound files, including PMR.SI DTMF triggered sound files, ensuring that SvxLink runs with the latest standard. All critical operations, such as download status and file permissions, are logged and displayed in the terminal.
 
 ### 3.4. List of possible outcomes:
 - **Failure:** If any of the files fail to download (e.g., network error, GitHub unavailable), the script exits with an error:
@@ -641,8 +641,26 @@ Upon execution, the script will automatically update the PMR.SI configuration an
 ✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/connection_lost.wav
 ✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/connection_restored.wav
 ✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/pmrsi_16b.wav
+✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/aktivnosti.wav
+✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/ankaran.wav
+✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/dravograd.wav
+✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/katarina.wav
+✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/kukava.wav
+✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/podkum.wav
+✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/smarje.wav
+✅ - Successfully updated: /usr/share/svxlink/sounds/en_US/Frn/zuzemberk.wav
 ✅ - Svxlink service restarted successfully
 ```
+
+### 3.5. List of svxlink PMR.SI added functionalities:
+Here is a list of added functionalities:
+- Default activation of FRN module on svxlink start (10s),
+- FRN & Parrot module linking with automatic control depending on FRN server availability,
+- DTMF PTY terminal /tmp/svxlink_dtmf for DTMF injection,
+- DTMF 990# for longer PMR.SI ad and 991# for a shorter one,
+- Custom module IDs,
+- Custom module timeouts, FRN does never timeout,
+- Other improvements.
 
 ---
 <br></br>

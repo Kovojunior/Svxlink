@@ -380,6 +380,7 @@ full_install() {
     install_wireguard
 
     echo ""
+    echo -e $'\e[1;33m⚠️ PMR.SI uses custom soundfiles on DTMF 990# and 991# commands. To have its full functionality, add your own recording (Wav 16bit PCM, Mono, 16KHz) and adjust the file location in /etc/svxlink/svxlink.conf as needed or remove it altogether in /usr/share/events.d/Logic.tcl\e[0m'    
     echo -e $'\e[1;32m✅ Full install completed successfully\e[0m\n'
 }
 
